@@ -5,7 +5,7 @@ use macroquad::{
 };
 
 use crate::{
-    draw::draw_level,
+    draw::{LevelDrawContext, draw_level},
     game_context::GameContext,
     level::{AboveTile, FloorTile, Level, LevelContext},
     service::level_loader::load_levels,
@@ -27,12 +27,40 @@ async fn main() {
         animation_time_s: 0.0,
         animation_deltas: vec![],
     };
+    let animation_time = 0.15;
 
     loop {
-        let _delta = get_frame_time();
+        let delta = get_frame_time();
+
         clear_background(BLACK);
-        let _result = service::movement::process(&mut game_context.level_context);
-        draw_level(&game_context.level_context.level, Default::default());
+        let result = service::movement::process(&mut game_context.level_context);
+        match result {
+            service::movement::ProcessResult::None => {}
+            service::movement::ProcessResult::Movement(movement_deltas) => {
+                game_context.animation_deltas = movement_deltas;
+                game_context.animation_time_s = 0.0;
+            }
+            service::movement::ProcessResult::Reset => {
+                game_context.animation_deltas = vec![];
+                game_context.animation_time_s = 0.0;
+            }
+        }
+
+        game_context.animation_time_s += delta;
+        if game_context.animation_time_s >= animation_time {
+            game_context.animation_deltas = vec![];
+            game_context.animation_time_s = 0.0;
+        }
+
+        let animation_progress = game_context.animation_time_s / animation_time;
+        draw_level(
+            &game_context.level_context.level,
+            &game_context.animation_deltas,
+            LevelDrawContext {
+                animation_progress,
+                ..Default::default()
+            },
+        );
         next_frame().await;
     }
 }
