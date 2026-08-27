@@ -27,7 +27,7 @@ async fn main() {
         animation_time_s: 0.0,
         animation_deltas: vec![],
     };
-    let animation_time = 0.15;
+    let animation_time = 0.13;
 
     loop {
         let delta = get_frame_time();
@@ -37,7 +37,15 @@ async fn main() {
         match result {
             service::movement::ProcessResult::None => {}
             service::movement::ProcessResult::Movement(movement_deltas) => {
-                game_context.animation_deltas = movement_deltas;
+                game_context.animation_deltas = movement_deltas.clone();
+                game_context.animation_time_s = 0.0;
+                game_context
+                    .level_context
+                    .previous_deltas
+                    .push(movement_deltas);
+            }
+            service::movement::ProcessResult::Undo(undo_movement_deltas) => {
+                game_context.animation_deltas = undo_movement_deltas;
                 game_context.animation_time_s = 0.0;
             }
             service::movement::ProcessResult::Reset => {

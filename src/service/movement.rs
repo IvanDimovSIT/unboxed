@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, mem::swap};
 
 use crate::{
     input,
@@ -17,9 +17,11 @@ pub enum ProcessResult {
     None,
     Movement(Vec<MovementDelta>),
     Reset,
+    Undo(Vec<MovementDelta>),
 }
 
 pub fn process(level_context: &mut LevelContext) -> ProcessResult {
+    let mut is_undo = false;
     let initial_deltas = if input::left() {
         create_player_deltas(&level_context.level, (-1, 0))
     } else if input::right() {
@@ -28,6 +30,11 @@ pub fn process(level_context: &mut LevelContext) -> ProcessResult {
         create_player_deltas(&level_context.level, (0, -1))
     } else if input::down() {
         create_player_deltas(&level_context.level, (0, 1))
+    } else if input::undo() {
+        let mut undo_deltas = level_context.previous_deltas.pop().unwrap_or(vec![]);
+        reverse_deltas(&mut undo_deltas);
+        is_undo = true;
+        undo_deltas
     } else {
         vec![]
     };
@@ -42,7 +49,11 @@ pub fn process(level_context: &mut LevelContext) -> ProcessResult {
         // TODO: filter duplicates?
         if !movement_deltas.is_empty() {
             apply_deltas(&mut level_context.level, &movement_deltas);
-            ProcessResult::Movement(movement_deltas)
+            if is_undo {
+                ProcessResult::Undo(movement_deltas)
+            } else {
+                ProcessResult::Movement(movement_deltas)
+            }
         } else {
             ProcessResult::None
         }
@@ -53,8 +64,8 @@ pub fn process(level_context: &mut LevelContext) -> ProcessResult {
 
 fn create_player_deltas(level: &Level, delta: (i32, i32)) -> Vec<MovementDelta> {
     let mut deltas = vec![];
-    for y in 0..Level::LEVEL_SIZE as i32 {
-        for x in 0..Level::LEVEL_SIZE as i32 {
+    for y in 0..Level::LEVEL_HEIGHT as i32 {
+        for x in 0..Level::LEVEL_WIDTH as i32 {
             let tile = level.get_above(x, y);
             if tile != AboveTile::Player {
                 continue;
@@ -87,10 +98,10 @@ fn create_movement_deltas(initial: Vec<MovementDelta>, level: &Level) -> Vec<Mov
 
     for d in &initial {
         let (x_to, y_to) = d.to;
-        if x_to < 0 || x_to >= Level::LEVEL_SIZE as i32 {
+        if x_to < 0 || x_to >= Level::LEVEL_WIDTH as i32 {
             continue;
         }
-        if y_to < 0 || y_to >= Level::LEVEL_SIZE as i32 {
+        if y_to < 0 || y_to >= Level::LEVEL_WIDTH as i32 {
             continue;
         }
         // TODO: check for duplicates or conflicts??
@@ -122,4 +133,10 @@ fn create_movement_deltas(initial: Vec<MovementDelta>, level: &Level) -> Vec<Mov
 fn calculate_push_delta(from: (i32, i32), to: (i32, i32)) -> (i32, i32) {
     let d = (to.0 - from.0, to.1 - from.1);
     (to.0 + d.0, to.1 + d.1)
+}
+
+fn reverse_deltas(deltas: &mut [MovementDelta]) {
+    for d in deltas {
+        swap(&mut d.from, &mut d.to);
+    }
 }

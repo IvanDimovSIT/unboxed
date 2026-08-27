@@ -15,7 +15,7 @@ use crate::{
 pub struct LevelDrawContext {
     pub start_x: f32,
     pub start_y: f32,
-    pub size: f32,
+    pub width: f32,
     /// values: [0.0 - 1.0]
     pub animation_progress: f32,
 }
@@ -24,7 +24,7 @@ impl Default for LevelDrawContext {
         Self {
             start_x: 0.0,
             start_y: 0.0,
-            size: 600.0,
+            width: 600.0,
             animation_progress: 0.0,
         }
     }
@@ -38,8 +38,8 @@ pub fn draw_level(level: &Level, deltas: &[MovementDelta], context: LevelDrawCon
         Cow::Owned(create_level_to_draw(level, deltas))
     };
 
-    for y in 0..Level::LEVEL_SIZE {
-        for x in 0..Level::LEVEL_SIZE {
+    for y in 0..Level::LEVEL_HEIGHT {
+        for x in 0..Level::LEVEL_WIDTH {
             let pos_x = x as f32 * tile_size + context.start_x;
             let pos_y = y as f32 * tile_size + context.start_y;
             let pos = vec2(pos_x, pos_y);
@@ -77,7 +77,7 @@ fn draw_animated_tiles(deltas: &[MovementDelta], context: LevelDrawContext) {
 }
 
 fn calculate_tile_size(context: LevelDrawContext) -> f32 {
-    context.size / Level::LEVEL_SIZE as f32
+    context.width / Level::LEVEL_WIDTH as f32
 }
 
 fn create_level_to_draw(level: &Level, deltas: &[MovementDelta]) -> Level {

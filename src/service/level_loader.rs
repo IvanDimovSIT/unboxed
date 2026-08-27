@@ -19,8 +19,8 @@ fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {
 
     let mut level = Level::default();
 
-    for y in 0..Level::LEVEL_SIZE as u32 {
-        for x in 0..Level::LEVEL_SIZE as u32 {
+    for y in 0..Level::LEVEL_HEIGHT as u32 {
+        for x in 0..Level::LEVEL_WIDTH as u32 {
             let floor_color = floor_image.get_pixel(x, y);
             let tile_color = tiles_image.get_pixel(x, y);
             level.set_below(color_to_floor(floor_color), x as i32, y as i32);

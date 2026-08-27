@@ -1,3 +1,5 @@
+use crate::service::movement::MovementDelta;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum AboveTile {
     #[default]
@@ -20,8 +22,9 @@ pub struct Level {
     above_tiles: [AboveTile; Self::TOTAL_TILES],
 }
 impl Level {
-    pub const LEVEL_SIZE: usize = 16;
-    const TOTAL_TILES: usize = Self::LEVEL_SIZE * Self::LEVEL_SIZE;
+    pub const LEVEL_WIDTH: usize = 16;
+    pub const LEVEL_HEIGHT: usize = 16;
+    const TOTAL_TILES: usize = Self::LEVEL_WIDTH * Self::LEVEL_HEIGHT;
 
     pub fn get_above(&self, x: i32, y: i32) -> AboveTile {
         self.above_tiles[Self::index(x, y)]
@@ -40,9 +43,9 @@ impl Level {
     }
 
     fn index(x: i32, y: i32) -> usize {
-        assert!(x >= 0 && x < Self::LEVEL_SIZE as i32);
-        assert!(y >= 0 && y < Self::LEVEL_SIZE as i32);
-        x as usize + y as usize * Self::LEVEL_SIZE
+        assert!(x >= 0 && x < Self::LEVEL_WIDTH as i32);
+        assert!(y >= 0 && y < Self::LEVEL_HEIGHT as i32);
+        x as usize + y as usize * Self::LEVEL_WIDTH
     }
 }
 impl Default for Level {
@@ -58,16 +61,21 @@ impl Default for Level {
 pub struct LevelContext {
     level_template: Level,
     pub level: Level,
+    pub previous_deltas: Vec<Vec<MovementDelta>>,
 }
 impl LevelContext {
+    const PREVIOUS_DELTAS_CAPACITY: usize = 32;
+
     pub fn new(level: Level) -> Self {
         Self {
             level_template: level.clone(),
             level,
+            previous_deltas: Vec::with_capacity(Self::PREVIOUS_DELTAS_CAPACITY),
         }
     }
 
     pub fn reset(&mut self) {
         self.level = self.level_template.clone();
+        self.previous_deltas.clear();
     }
 }

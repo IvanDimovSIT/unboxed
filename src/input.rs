@@ -19,3 +19,7 @@ pub fn down() -> bool {
 pub fn reset() -> bool {
     is_key_pressed(KeyCode::R)
 }
+
+pub fn undo() -> bool {
+    is_key_pressed(KeyCode::Z)
+}
