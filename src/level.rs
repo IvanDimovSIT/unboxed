@@ -1,6 +1,6 @@
 use crate::service::movement::MovementDelta;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum AboveTile {
     #[default]
     None,
@@ -62,20 +62,30 @@ pub struct LevelContext {
     level_template: Level,
     pub level: Level,
     pub previous_deltas: Vec<Vec<MovementDelta>>,
+    pub animation_time_s: f32,
+    pub animation_deltas: Vec<MovementDelta>,
+    pub current_level_index: usize,
+    pub is_win: bool,
 }
 impl LevelContext {
     const PREVIOUS_DELTAS_CAPACITY: usize = 32;
 
-    pub fn new(level: Level) -> Self {
+    pub fn new(level: Level, index: usize) -> Self {
         Self {
             level_template: level.clone(),
             level,
             previous_deltas: Vec::with_capacity(Self::PREVIOUS_DELTAS_CAPACITY),
+            animation_time_s: 0.0,
+            animation_deltas: vec![],
+            current_level_index: index,
+            is_win: false,
         }
     }
 
     pub fn reset(&mut self) {
         self.level = self.level_template.clone();
         self.previous_deltas.clear();
+        self.animation_deltas.clear();
+        self.animation_time_s = 0.0;
     }
 }

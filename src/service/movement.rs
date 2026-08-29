@@ -5,7 +5,7 @@ use crate::{
     level::{AboveTile, Level, LevelContext},
 };
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct MovementDelta {
     pub tile: AboveTile,
     pub from: (i32, i32),
@@ -21,6 +21,10 @@ pub enum ProcessResult {
 }
 
 pub fn process(level_context: &mut LevelContext) -> ProcessResult {
+    if level_context.is_win {
+        return ProcessResult::None;
+    }
+
     let mut is_undo = false;
     let initial_deltas = if input::left() {
         create_player_deltas(&level_context.level, (-1, 0))
@@ -45,8 +49,8 @@ pub fn process(level_context: &mut LevelContext) -> ProcessResult {
     }
 
     if !initial_deltas.is_empty() {
-        let movement_deltas = create_movement_deltas(initial_deltas, &level_context.level);
-        // TODO: filter duplicates?
+        let movement_deltas =
+            remove_dulplicate_deltas(create_movement_deltas(initial_deltas, &level_context.level));
         if !movement_deltas.is_empty() {
             apply_deltas(&mut level_context.level, &movement_deltas);
             if is_undo {
@@ -139,4 +143,9 @@ fn reverse_deltas(deltas: &mut [MovementDelta]) {
     for d in deltas {
         swap(&mut d.from, &mut d.to);
     }
+}
+
+fn remove_dulplicate_deltas(deltas: Vec<MovementDelta>) -> Vec<MovementDelta> {
+    let set: HashSet<MovementDelta> = deltas.into_iter().collect();
+    set.into_iter().collect()
 }

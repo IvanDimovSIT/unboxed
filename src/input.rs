@@ -23,3 +23,7 @@ pub fn reset() -> bool {
 pub fn undo() -> bool {
     is_key_pressed(KeyCode::Z)
 }
+
+pub fn any_input() -> bool {
+    up() || down() || right() || left() || reset() || undo()
+}

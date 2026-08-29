@@ -5,9 +5,13 @@ use crate::level::{AboveTile, FloorTile, Level};
 const L1_F: &[u8] = include_bytes!("../../levels/1/floor.png");
 const L1_T: &[u8] = include_bytes!("../../levels/1/tiles.png");
 
+const L2_F: &[u8] = include_bytes!("../../levels/2/floor.png");
+const L2_T: &[u8] = include_bytes!("../../levels/2/tiles.png");
+
 pub fn load_levels() -> Vec<Level> {
     let mut levels = vec![];
     levels.push(load_level(L1_F, L1_T));
+    levels.push(load_level(L2_F, L2_T));
 
     levels
 }
