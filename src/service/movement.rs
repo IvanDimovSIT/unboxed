@@ -21,7 +21,7 @@ pub enum ProcessResult {
 }
 
 pub fn process(level_context: &mut LevelContext) -> ProcessResult {
-    if level_context.is_win {
+    if level_context.is_win || level_context.animation_deltas.len() > 0 {
         return ProcessResult::None;
     }
 

@@ -1,4 +1,4 @@
-use macroquad::input::{KeyCode, is_key_pressed};
+use macroquad::input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed};
 
 pub fn left() -> bool {
     is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left)
@@ -22,6 +22,14 @@ pub fn reset() -> bool {
 
 pub fn undo() -> bool {
     is_key_pressed(KeyCode::Z)
+}
+
+pub fn exit() -> bool {
+    is_key_pressed(KeyCode::Escape)
+}
+
+pub fn click() -> bool {
+    is_mouse_button_pressed(MouseButton::Left)
 }
 
 pub fn any_input() -> bool {

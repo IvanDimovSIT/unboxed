@@ -1,5 +1,3 @@
-use macroquad::{color::BLACK, window::clear_background};
-
 use crate::{
     graphics::{
         draw::{LevelDrawContext, draw_level},
@@ -7,7 +5,9 @@ use crate::{
     },
     input,
     level::{Level, LevelContext},
-    service::{self, movement::MovementDelta},
+    resource_manager::ResourceManager,
+    service::{self},
+    ui::{draw_level_select::draw_level_select, message::display_message},
 };
 
 #[derive(Debug)]
@@ -17,31 +17,38 @@ enum Mode {
 }
 
 #[derive(Debug)]
-enum Event {
+pub enum Event {
     None,
     ChangeLevel(usize),
+    ToMenu,
 }
 
 #[derive(Debug)]
 pub struct GameContext<'a> {
+    resource_manager: &'a ResourceManager,
     level_templates: &'a [Level],
     mode: Mode,
 }
 impl<'a> GameContext<'a> {
     const ANIMATION_TIME: f32 = 0.1;
 
-    pub fn new(levels: &'a [Level]) -> Self {
+    pub fn new(resource_manager: &'a ResourceManager, levels: &'a [Level]) -> Self {
         Self {
+            resource_manager,
             level_templates: levels,
-            mode: Mode::InLevel(LevelContext::new(levels[0].clone(), 0)),
+            mode: Mode::InMenu,
         }
     }
 
     pub fn process_frame(&mut self, delta: f32) {
-        clear_background(BLACK);
         let event = match &mut self.mode {
-            Mode::InLevel(ctx) => Self::process_level(ctx, delta),
-            Mode::InMenu => todo!(),
+            Mode::InLevel(ctx) => Self::process_level(
+                ctx,
+                self.level_templates.len(),
+                self.resource_manager,
+                delta,
+            ),
+            Mode::InMenu => draw_level_select(self.level_templates.len(), self.resource_manager),
         };
 
         match event {
@@ -54,10 +61,20 @@ impl<'a> GameContext<'a> {
                     ))
                 }
             }
+            Event::ToMenu => self.mode = Mode::InMenu,
         }
     }
 
-    fn process_level(level_context: &mut LevelContext, delta: f32) -> Event {
+    fn process_level(
+        level_context: &mut LevelContext,
+        levels_count: usize,
+        resource_manager: &'a ResourceManager,
+        delta: f32,
+    ) -> Event {
+        if input::exit() {
+            return Event::ToMenu;
+        }
+
         let result = service::movement::process(level_context);
         match result {
             service::movement::ProcessResult::None => {}
@@ -84,22 +101,32 @@ impl<'a> GameContext<'a> {
 
         let animation_progress = level_context.animation_time_s / Self::ANIMATION_TIME;
         let window_pos = find_level_window_position();
-        draw_level(
-            &level_context.level,
-            &level_context.animation_deltas,
-            LevelDrawContext {
-                animation_progress,
-                start_x: window_pos.start_x,
-                start_y: window_pos.start_y,
-                width: window_pos.width,
-            },
-        );
+        draw_level(LevelDrawContext {
+            animation_progress,
+            start_x: window_pos.start_x,
+            start_y: window_pos.start_y,
+            width: window_pos.width,
+            level: &level_context.level,
+            deltas: &level_context.animation_deltas,
+            resource_manager,
+        });
+
+        if level_context.is_win {
+            display_message(
+                &["Level complete!", "Press any key to continue..."],
+                resource_manager,
+            );
+        }
 
         if !level_context.is_win && service::win_condition::is_win(&level_context.level) {
             level_context.is_win = true;
             Event::None
         } else if level_context.is_win && input::any_input() {
-            Event::ChangeLevel(level_context.current_level_index + 1)
+            if level_context.current_level_index + 1 == levels_count {
+                Event::ToMenu
+            } else {
+                Event::ChangeLevel(level_context.current_level_index + 1)
+            }
         } else {
             Event::None
         }
