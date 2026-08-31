@@ -15,7 +15,7 @@ pub struct DrawLevelButtonContext<'a> {
     pub mouse_pos: Vec2,
 }
 
-pub fn draw_level_button(level: usize, x: f32, y: f32, context: &DrawLevelButtonContext) -> bool {
+pub fn draw_square_button(text: &str, x: f32, y: f32, context: &DrawLevelButtonContext) -> bool {
     let button_rect = Rect::new(x, y, context.size, context.size);
     let is_hovered = button_rect.contains(context.mouse_pos);
     let texture = if is_hovered {
@@ -33,15 +33,14 @@ pub fn draw_level_button(level: usize, x: f32, y: f32, context: &DrawLevelButton
             ..Default::default()
         },
     );
-    let text = format!("{level}");
     let font_size = (context.size * TEXT_SIZE_COEF) as u16;
 
-    let text_dimensions = measure_text(&text, Some(&context.resource_manager.font), font_size, 1.0);
+    let text_dimensions = measure_text(text, Some(&context.resource_manager.font), font_size, 1.0);
     let margin_x = text_dimensions.width * 0.2;
     let margin_y = text_dimensions.height * 1.3;
 
     draw_text_ex(
-        &text,
+        text,
         x + margin_x,
         y + margin_y,
         TextParams {

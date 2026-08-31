@@ -1,16 +1,16 @@
-use macroquad::{
-    color::BLACK, input::mouse_position, math::vec2, miniquad::window::screen_size,
-    window::clear_background,
-};
-
 use crate::{
     game_context::Event,
     resource_manager::ResourceManager,
     ui::{
-        level_button::{DrawLevelButtonContext, draw_level_button},
+        level_button::{DrawLevelButtonContext, draw_square_button},
         message::draw_centered_text,
     },
 };
+use macroquad::{
+    color::BLACK, input::mouse_position, math::vec2, miniquad::window::screen_size, prelude::error,
+    window::clear_background,
+};
+use std::fmt::Write;
 
 const TITLE_Y_COEF: f32 = 0.04;
 const TITLE_SIZE_COEF: f32 = 0.08;
@@ -36,11 +36,17 @@ pub fn draw_level_select(levels_count: usize, resource_manager: &ResourceManager
     };
 
     let mut selected_level = None;
+    let mut text_buffer = String::with_capacity(3);
     for i in 0..levels_count {
         let row = i / BUTTONS_PER_ROW;
         let x = start_x + (i % BUTTONS_PER_ROW) as f32 * (button_size + margin);
         let y = start_y + (button_size + margin) * row as f32;
-        if draw_level_button(i, x, y, &button_ctx) {
+        text_buffer.clear();
+        let write_result = write!(&mut text_buffer, "{}", i + 1);
+        if let Err(err) = write_result {
+            error!("Error writing level number {}", err);
+        }
+        if draw_square_button(&text_buffer, x, y, &button_ctx) {
             selected_level = Some(i);
         }
     }

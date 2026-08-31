@@ -93,7 +93,9 @@ impl<'a> GameContext<'a> {
             }
         }
 
-        level_context.animation_time_s += delta;
+        if !level_context.animation_deltas.is_empty() {
+            level_context.animation_time_s += delta;
+        }
         if level_context.animation_time_s >= Self::ANIMATION_TIME {
             level_context.animation_deltas = vec![];
             level_context.animation_time_s = 0.0;

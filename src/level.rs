@@ -66,6 +66,7 @@ pub struct LevelContext {
     pub animation_deltas: Vec<MovementDelta>,
     pub current_level_index: usize,
     pub is_win: bool,
+    pub cached_move: Option<(i32, i32)>,
 }
 impl LevelContext {
     const PREVIOUS_DELTAS_CAPACITY: usize = 32;
@@ -79,6 +80,7 @@ impl LevelContext {
             animation_deltas: vec![],
             current_level_index: index,
             is_win: false,
+            cached_move: None,
         }
     }
 
@@ -87,5 +89,6 @@ impl LevelContext {
         self.previous_deltas.clear();
         self.animation_deltas.clear();
         self.animation_time_s = 0.0;
+        self.cached_move = None;
     }
 }
