@@ -1,15 +1,13 @@
 use crate::{
     game_context::Event,
+    graphics::background::draw_background,
     resource_manager::ResourceManager,
     ui::{
         level_button::{DrawLevelButtonContext, draw_square_button},
         message::draw_centered_text,
     },
 };
-use macroquad::{
-    color::BLACK, input::mouse_position, math::vec2, miniquad::window::screen_size, prelude::error,
-    window::clear_background,
-};
+use macroquad::{input::mouse_position, math::vec2, miniquad::window::screen_size, prelude::error};
 use std::fmt::Write;
 
 const TITLE_Y_COEF: f32 = 0.04;
@@ -19,7 +17,7 @@ const BUTTONS_SIZE_COEF: f32 = 0.05;
 const MARGIN_COEF: f32 = 0.01;
 
 pub fn draw_level_select(levels_count: usize, resource_manager: &ResourceManager) -> Event {
-    clear_background(BLACK);
+    draw_background(resource_manager);
     let (width, height) = screen_size();
     let button_size = BUTTONS_SIZE_COEF * width;
     let margin = MARGIN_COEF * width;

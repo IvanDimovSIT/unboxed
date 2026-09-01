@@ -14,6 +14,7 @@ const BOX_IMG: &[u8] = include_bytes!("../resources/images/box.png");
 const LEVEL_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/level_button.png");
 const LEVEL_BUTTON_SELECTED_IMG: &[u8] =
     include_bytes!("../resources/images/level_button_selected.png");
+const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png");
 
 const FONT_BYTES: &[u8] = include_bytes!("../resources/font.ttf");
 
@@ -22,6 +23,7 @@ pub struct ResourceManager {
     pub font: Font,
     pub level_button: Texture2D,
     pub level_button_selected: Texture2D,
+    pub background: Texture2D,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
     wall_tile: Texture2D,
@@ -39,6 +41,7 @@ impl ResourceManager {
             wall_tile: Self::load(WALL_IMG),
             player_tile: Self::load(PALYER_IMG),
             box_tile: Self::load(BOX_IMG),
+            background: Self::load(BACKGROUND_IMG),
         }
     }
 

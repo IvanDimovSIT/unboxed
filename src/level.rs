@@ -22,8 +22,8 @@ pub struct Level {
     above_tiles: [AboveTile; Self::TOTAL_TILES],
 }
 impl Level {
-    pub const LEVEL_WIDTH: usize = 16;
-    pub const LEVEL_HEIGHT: usize = 16;
+    pub const LEVEL_WIDTH: usize = 18;
+    pub const LEVEL_HEIGHT: usize = 14;
     const TOTAL_TILES: usize = Self::LEVEL_WIDTH * Self::LEVEL_HEIGHT;
 
     pub fn get_above(&self, x: i32, y: i32) -> AboveTile {

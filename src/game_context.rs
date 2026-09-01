@@ -1,5 +1,6 @@
 use crate::{
     graphics::{
+        background::draw_background,
         draw::{LevelDrawContext, draw_level},
         level_window::find_level_window_position,
     },
@@ -103,6 +104,7 @@ impl<'a> GameContext<'a> {
 
         let animation_progress = level_context.animation_time_s / Self::ANIMATION_TIME;
         let window_pos = find_level_window_position();
+        draw_background(resource_manager);
         draw_level(LevelDrawContext {
             animation_progress,
             start_x: window_pos.start_x,
