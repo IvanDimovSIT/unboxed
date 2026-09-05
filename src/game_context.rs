@@ -1,3 +1,5 @@
+use macroquad::{input::mouse_position, math::vec2, miniquad::window::screen_size};
+
 use crate::{
     graphics::{
         background::draw_background,
@@ -5,10 +7,14 @@ use crate::{
         level_window::find_level_window_position,
     },
     input,
-    level::{Level, LevelContext},
-    resource_manager::ResourceManager,
-    service::{self},
-    ui::{draw_level_select::draw_level_select, message::display_message},
+    level::{AboveTile, Level, LevelContext},
+    resource_manager::{ResourceManager, SoundId},
+    service::{self, movement::MovementDelta},
+    ui::{
+        buttons::{DrawLevelButtonContext, draw_back_button},
+        draw_level_select::draw_level_select,
+        message::display_message,
+    },
 };
 
 #[derive(Debug)]
@@ -80,6 +86,7 @@ impl<'a> GameContext<'a> {
         match result {
             service::movement::ProcessResult::None => {}
             service::movement::ProcessResult::Movement(movement_deltas) => {
+                Self::play_sounds_for_deltas(&movement_deltas, resource_manager);
                 level_context.animation_deltas = movement_deltas.clone();
                 level_context.animation_time_s = 0.0;
                 level_context.previous_deltas.push(movement_deltas);
@@ -122,8 +129,13 @@ impl<'a> GameContext<'a> {
             );
         }
 
+        if Self::draw_back_button(resource_manager) {
+            return Event::ToMenu;
+        }
+
         if !level_context.is_win && service::win_condition::is_win(&level_context.level) {
             level_context.is_win = true;
+            resource_manager.play_sound(SoundId::Win);
             Event::None
         } else if level_context.is_win && input::any_input() {
             if level_context.current_level_index + 1 == levels_count {
@@ -133,6 +145,38 @@ impl<'a> GameContext<'a> {
             }
         } else {
             Event::None
+        }
+    }
+
+    fn draw_back_button(resource_manager: &ResourceManager) -> bool {
+        const BTN_SIZE_COEF: f32 = 0.07;
+        const POS_COEF: f32 = 0.02;
+        let (width, height) = screen_size();
+        let (mouse_x, mouse_y) = mouse_position();
+        let button_suze = BTN_SIZE_COEF * height;
+        let ctx = DrawLevelButtonContext {
+            size: button_suze,
+            resource_manager,
+            mouse_pos: vec2(mouse_x, mouse_y),
+        };
+
+        let smaller_size = width.min(height);
+        let xy = POS_COEF * smaller_size;
+        draw_back_button(xy, xy, &ctx)
+    }
+
+    fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
+        for d in deltas {
+            if d.tile == AboveTile::Box {
+                resource_manager.play_sound(SoundId::PushBox);
+                break;
+            }
+        }
+        for d in deltas {
+            if d.tile == AboveTile::Player {
+                resource_manager.play_sound(SoundId::Move);
+                return;
+            }
         }
     }
 }

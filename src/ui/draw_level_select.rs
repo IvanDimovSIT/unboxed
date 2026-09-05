@@ -3,7 +3,7 @@ use crate::{
     graphics::background::draw_background,
     resource_manager::ResourceManager,
     ui::{
-        level_button::{DrawLevelButtonContext, draw_square_button},
+        buttons::{DrawLevelButtonContext, draw_square_button},
         message::draw_centered_text,
     },
 };

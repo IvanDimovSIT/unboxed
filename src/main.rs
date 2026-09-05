@@ -15,7 +15,7 @@ mod ui;
 
 #[macroquad::main("Unboxed")]
 async fn main() {
-    let resource_manager = ResourceManager::new();
+    let resource_manager = ResourceManager::new().await;
     let levels = load_levels();
     let mut game_context = GameContext::new(&resource_manager, &levels);
 
