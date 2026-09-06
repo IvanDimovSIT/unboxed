@@ -12,6 +12,12 @@ pub fn is_win(level: &Level) -> bool {
                         return false;
                     }
                 }
+                FloorTile::PlayerExit => {
+                    let tile = level.get_above(x, y);
+                    if tile != AboveTile::Player {
+                        return false;
+                    }
+                }
             }
         }
     }

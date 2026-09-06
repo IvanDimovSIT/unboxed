@@ -32,6 +32,8 @@ pub fn click() -> bool {
     is_mouse_button_pressed(MouseButton::Left)
 }
 
-pub fn any_input() -> bool {
-    up() || down() || right() || left() || reset() || undo()
+pub fn next_level() -> bool {
+    is_key_pressed(KeyCode::Space)
+        || is_key_pressed(KeyCode::Enter)
+        || is_key_pressed(KeyCode::KpEnter)
 }

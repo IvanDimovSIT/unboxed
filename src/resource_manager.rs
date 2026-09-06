@@ -4,12 +4,17 @@ use macroquad::{
     audio::{PlaySoundParams, Sound, load_sound_from_bytes, play_sound},
     text::{Font, load_ttf_font_from_bytes},
     texture::Texture2D,
+    window::next_frame,
 };
 
-use crate::level::{AboveTile, FloorTile};
+use crate::{
+    level::{AboveTile, FloorTile},
+    ui::message::draw_loading_screen,
+};
 
 const EMPTY_IMG: &[u8] = include_bytes!("../resources/images/empty.png");
 const BOX_EXIT_IMG: &[u8] = include_bytes!("../resources/images/box_exit.png");
+const PLAYER_EXIT_IMG: &[u8] = include_bytes!("../resources/images/player_exit.png");
 const WALL_IMG: &[u8] = include_bytes!("../resources/images/wall.png");
 const PALYER_IMG: &[u8] = include_bytes!("../resources/images/player.png");
 const BOX_IMG: &[u8] = include_bytes!("../resources/images/box.png");
@@ -55,18 +60,24 @@ pub struct ResourceManager {
     sounds: HashMap<SoundId, Sound>,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
+    player_exit_tile: Texture2D,
     wall_tile: Texture2D,
     player_tile: Texture2D,
     box_tile: Texture2D,
 }
 impl ResourceManager {
     pub async fn new() -> Self {
+        let font = Self::load_font();
+        draw_loading_screen(&font);
+        next_frame().await;
+
         Self {
-            font: Self::load_font(),
+            font,
             level_button: Self::load(LEVEL_BUTTON_IMG),
             level_button_selected: Self::load(LEVEL_BUTTON_SELECTED_IMG),
             empty_tile: Self::load(EMPTY_IMG),
             box_exit_tile: Self::load(BOX_EXIT_IMG),
+            player_exit_tile: Self::load(PLAYER_EXIT_IMG),
             wall_tile: Self::load(WALL_IMG),
             player_tile: Self::load(PALYER_IMG),
             box_tile: Self::load(BOX_IMG),
@@ -86,6 +97,7 @@ impl ResourceManager {
         match floor {
             FloorTile::None => &self.empty_tile,
             FloorTile::BoxExit => &self.box_exit_tile,
+            FloorTile::PlayerExit => &self.player_exit_tile,
         }
     }
 

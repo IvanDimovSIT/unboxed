@@ -1,7 +1,8 @@
 use macroquad::{
-    color::Color,
+    color::{BLACK, Color},
     miniquad::window::screen_size,
-    text::{TextParams, draw_text_ex, measure_text},
+    text::{Font, TextParams, draw_text_ex, measure_text},
+    window::clear_background,
 };
 
 use crate::resource_manager::ResourceManager;
@@ -80,6 +81,27 @@ pub fn draw_centered_text(text: &str, y_coef: f32, size: f32, resource_manager: 
             font_size: text_size,
             font_scale: 1.0,
             color: TEXT_COLOR,
+            ..Default::default()
+        },
+    );
+}
+
+pub fn draw_loading_screen(font: &Font) {
+    let text = "Loading...";
+    clear_background(BLACK);
+    let (width, height) = screen_size();
+    let font_size = (width.max(height) * 0.1) as u16;
+    let text_dimenstion = measure_text(text, Some(font), font_size, 1.0);
+    let x = (width - text_dimenstion.width) / 2.0;
+    let y = height * 0.2;
+
+    draw_text_ex(
+        text,
+        x,
+        y,
+        TextParams {
+            font: Some(font),
+            font_size,
             ..Default::default()
         },
     );

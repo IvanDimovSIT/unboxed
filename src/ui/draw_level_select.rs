@@ -3,7 +3,7 @@ use crate::{
     graphics::background::draw_background,
     resource_manager::ResourceManager,
     ui::{
-        buttons::{DrawLevelButtonContext, draw_square_button},
+        buttons::{DrawLevelButtonContext, draw_help_button, draw_square_button},
         message::draw_centered_text,
     },
 };
@@ -49,8 +49,12 @@ pub fn draw_level_select(levels_count: usize, resource_manager: &ResourceManager
         }
     }
 
+    let is_go_to_help = draw_help_button(resource_manager);
+
     if let Some(level) = selected_level {
         Event::ChangeLevel(level)
+    } else if is_go_to_help {
+        Event::ToHelp
     } else {
         Event::None
     }

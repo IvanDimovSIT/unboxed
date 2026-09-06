@@ -14,6 +14,7 @@ pub enum FloorTile {
     #[default]
     None,
     BoxExit,
+    PlayerExit,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -8,18 +8,30 @@ const L1_T: &[u8] = include_bytes!("../../levels/1/tiles.png");
 const L2_F: &[u8] = include_bytes!("../../levels/2/floor.png");
 const L2_T: &[u8] = include_bytes!("../../levels/2/tiles.png");
 
+const L3_F: &[u8] = include_bytes!("../../levels/3/floor.png");
+const L3_T: &[u8] = include_bytes!("../../levels/3/tiles.png");
+
+const L4_F: &[u8] = include_bytes!("../../levels/4/floor.png");
+const L4_T: &[u8] = include_bytes!("../../levels/4/tiles.png");
+
+const L5_F: &[u8] = include_bytes!("../../levels/5/floor.png");
+const L5_T: &[u8] = include_bytes!("../../levels/5/tiles.png");
+
 const BOX_EXIT_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
+const PLAYER_EXIT_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const BOX_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
 const WALL_COLOR: Color = Color::from_rgba(255, 255, 255, 255);
 const PLAYER_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const EMPTY_TILE_COLOR: Color = Color::from_rgba(0, 0, 0, 255);
 
 pub fn load_levels() -> Vec<Level> {
-    let mut levels = vec![];
-    levels.push(load_level(L1_F, L1_T));
-    levels.push(load_level(L2_F, L2_T));
-
-    levels
+    vec![
+        load_level(L1_F, L1_T),
+        load_level(L2_F, L2_T),
+        load_level(L3_F, L3_T),
+        load_level(L4_F, L4_T),
+        load_level(L5_F, L5_T),
+    ]
 }
 
 fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {
@@ -48,7 +60,9 @@ fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {
 }
 
 fn color_to_floor(color: Color) -> FloorTile {
-    if color == BOX_EXIT_COLOR {
+    if color == PLAYER_EXIT_COLOR {
+        FloorTile::PlayerExit
+    } else if color == BOX_EXIT_COLOR {
         FloorTile::BoxExit
     } else if color == EMPTY_TILE_COLOR {
         FloorTile::None

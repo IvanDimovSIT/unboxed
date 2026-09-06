@@ -1,5 +1,3 @@
-use macroquad::{input::mouse_position, math::vec2, miniquad::window::screen_size};
-
 use crate::{
     graphics::{
         background::draw_background,
@@ -11,8 +9,7 @@ use crate::{
     resource_manager::{ResourceManager, SoundId},
     service::{self, movement::MovementDelta},
     ui::{
-        buttons::{DrawLevelButtonContext, draw_back_button},
-        draw_level_select::draw_level_select,
+        buttons::draw_back_button, draw_help::draw_help, draw_level_select::draw_level_select,
         message::display_message,
     },
 };
@@ -20,14 +17,16 @@ use crate::{
 #[derive(Debug)]
 enum Mode {
     InLevel(LevelContext),
-    InMenu,
+    LevelSelect,
+    Help,
 }
 
 #[derive(Debug)]
 pub enum Event {
     None,
     ChangeLevel(usize),
-    ToMenu,
+    ToLevelSelect,
+    ToHelp,
 }
 
 #[derive(Debug)]
@@ -43,7 +42,7 @@ impl<'a> GameContext<'a> {
         Self {
             resource_manager,
             level_templates: levels,
-            mode: Mode::InMenu,
+            mode: Mode::LevelSelect,
         }
     }
 
@@ -55,7 +54,10 @@ impl<'a> GameContext<'a> {
                 self.resource_manager,
                 delta,
             ),
-            Mode::InMenu => draw_level_select(self.level_templates.len(), self.resource_manager),
+            Mode::LevelSelect => {
+                draw_level_select(self.level_templates.len(), self.resource_manager)
+            }
+            Mode::Help => draw_help(self.resource_manager),
         };
 
         match event {
@@ -68,7 +70,8 @@ impl<'a> GameContext<'a> {
                     ))
                 }
             }
-            Event::ToMenu => self.mode = Mode::InMenu,
+            Event::ToLevelSelect => self.mode = Mode::LevelSelect,
+            Event::ToHelp => self.mode = Mode::Help,
         }
     }
 
@@ -79,7 +82,7 @@ impl<'a> GameContext<'a> {
         delta: f32,
     ) -> Event {
         if input::exit() {
-            return Event::ToMenu;
+            return Event::ToLevelSelect;
         }
 
         let result = service::movement::process(level_context);
@@ -124,45 +127,28 @@ impl<'a> GameContext<'a> {
 
         if level_context.is_win {
             display_message(
-                &["Level complete!", "Press any key to continue..."],
+                &["Level complete!", "Press space to continue..."],
                 resource_manager,
             );
         }
 
-        if Self::draw_back_button(resource_manager) {
-            return Event::ToMenu;
+        if draw_back_button(resource_manager) {
+            return Event::ToLevelSelect;
         }
 
         if !level_context.is_win && service::win_condition::is_win(&level_context.level) {
             level_context.is_win = true;
             resource_manager.play_sound(SoundId::Win);
             Event::None
-        } else if level_context.is_win && input::any_input() {
+        } else if level_context.is_win && input::next_level() {
             if level_context.current_level_index + 1 == levels_count {
-                Event::ToMenu
+                Event::ToLevelSelect
             } else {
                 Event::ChangeLevel(level_context.current_level_index + 1)
             }
         } else {
             Event::None
         }
-    }
-
-    fn draw_back_button(resource_manager: &ResourceManager) -> bool {
-        const BTN_SIZE_COEF: f32 = 0.07;
-        const POS_COEF: f32 = 0.02;
-        let (width, height) = screen_size();
-        let (mouse_x, mouse_y) = mouse_position();
-        let button_suze = BTN_SIZE_COEF * height;
-        let ctx = DrawLevelButtonContext {
-            size: button_suze,
-            resource_manager,
-            mouse_pos: vec2(mouse_x, mouse_y),
-        };
-
-        let smaller_size = width.min(height);
-        let xy = POS_COEF * smaller_size;
-        draw_back_button(xy, xy, &ctx)
     }
 
     fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
