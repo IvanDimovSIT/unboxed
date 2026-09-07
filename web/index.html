@@ -4,11 +4,13 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="theme-color" content="#000000">
+        <link rel="icon" type="image/png" href="favicon.png">
         <title>Unboxed</title>
         <style>
             html,
             body,
             canvas {
+                cursor: url('cursor.png') 0 0, auto;
                 margin: 0px;
                 padding: 0px;
                 width: 100%;
@@ -24,6 +26,8 @@
     <body>
         <canvas id="glcanvas" tabindex="1"></canvas>
         <script src="mq_js_bundle.js"></script>
+        <script src="sapp_jsutils.js"></script>
+        <script src="quad-storage.js"></script>
         <script>
             load("unboxed.wasm");
         </script>

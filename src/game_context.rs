@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     graphics::{
         background::draw_background,
@@ -7,7 +9,7 @@ use crate::{
     input,
     level::{AboveTile, Level, LevelContext},
     resource_manager::{ResourceManager, SoundId},
-    service::{self, movement::MovementDelta},
+    service::{self, movement::MovementDelta, persistence::save_completed_levels},
     ui::{
         buttons::draw_back_button, draw_help::draw_help, draw_level_select::draw_level_select,
         message::display_message,
@@ -26,6 +28,7 @@ pub enum Event {
     None,
     ChangeLevel(usize),
     ToLevelSelect,
+    WinLevel(usize),
     ToHelp,
 }
 
@@ -33,16 +36,22 @@ pub enum Event {
 pub struct GameContext<'a> {
     resource_manager: &'a ResourceManager,
     level_templates: &'a [Level],
+    completed_levels: HashSet<usize>,
     mode: Mode,
 }
 impl<'a> GameContext<'a> {
     const ANIMATION_TIME: f32 = 0.1;
 
-    pub fn new(resource_manager: &'a ResourceManager, levels: &'a [Level]) -> Self {
+    pub fn new(
+        resource_manager: &'a ResourceManager,
+        levels: &'a [Level],
+        completed_levels: HashSet<usize>,
+    ) -> Self {
         Self {
             resource_manager,
             level_templates: levels,
             mode: Mode::LevelSelect,
+            completed_levels,
         }
     }
 
@@ -54,9 +63,11 @@ impl<'a> GameContext<'a> {
                 self.resource_manager,
                 delta,
             ),
-            Mode::LevelSelect => {
-                draw_level_select(self.level_templates.len(), self.resource_manager)
-            }
+            Mode::LevelSelect => draw_level_select(
+                self.level_templates.len(),
+                &self.completed_levels,
+                self.resource_manager,
+            ),
             Mode::Help => draw_help(self.resource_manager),
         };
 
@@ -72,6 +83,10 @@ impl<'a> GameContext<'a> {
             }
             Event::ToLevelSelect => self.mode = Mode::LevelSelect,
             Event::ToHelp => self.mode = Mode::Help,
+            Event::WinLevel(won_level) => {
+                self.completed_levels.insert(won_level);
+                save_completed_levels(&self.completed_levels)
+            }
         }
     }
 
@@ -139,7 +154,7 @@ impl<'a> GameContext<'a> {
         if !level_context.is_win && service::win_condition::is_win(&level_context.level) {
             level_context.is_win = true;
             resource_manager.play_sound(SoundId::Win);
-            Event::None
+            Event::WinLevel(level_context.current_level_index)
         } else if level_context.is_win && input::next_level() {
             if level_context.current_level_index + 1 == levels_count {
                 Event::ToLevelSelect

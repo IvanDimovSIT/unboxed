@@ -26,6 +26,7 @@ const BACK_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/back_button.p
 const BACK_BUTTON_SELECTED_IMG: &[u8] =
     include_bytes!("../resources/images/back_button_selected.png");
 const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png");
+const CHECKMARK_IMG: &[u8] = include_bytes!("../resources/images/checkmark.png");
 
 const FONT_BYTES: &[u8] = include_bytes!("../resources/font.ttf");
 
@@ -57,6 +58,7 @@ pub struct ResourceManager {
     pub back_button: Texture2D,
     pub back_button_selected: Texture2D,
     pub background: Texture2D,
+    pub checkmark: Texture2D,
     sounds: HashMap<SoundId, Sound>,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
@@ -85,6 +87,7 @@ impl ResourceManager {
             sounds: Self::load_sounds().await,
             back_button: Self::load(BACK_BUTTON_IMG),
             back_button_selected: Self::load(BACK_BUTTON_SELECTED_IMG),
+            checkmark: Self::load(CHECKMARK_IMG),
         }
     }
 

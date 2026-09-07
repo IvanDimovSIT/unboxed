@@ -2,20 +2,7 @@ use macroquad::{color::Color, prelude::error, texture::Image};
 
 use crate::level::{AboveTile, FloorTile, Level};
 
-const L1_F: &[u8] = include_bytes!("../../levels/1/floor.png");
-const L1_T: &[u8] = include_bytes!("../../levels/1/tiles.png");
-
-const L2_F: &[u8] = include_bytes!("../../levels/2/floor.png");
-const L2_T: &[u8] = include_bytes!("../../levels/2/tiles.png");
-
-const L3_F: &[u8] = include_bytes!("../../levels/3/floor.png");
-const L3_T: &[u8] = include_bytes!("../../levels/3/tiles.png");
-
-const L4_F: &[u8] = include_bytes!("../../levels/4/floor.png");
-const L4_T: &[u8] = include_bytes!("../../levels/4/tiles.png");
-
-const L5_F: &[u8] = include_bytes!("../../levels/5/floor.png");
-const L5_T: &[u8] = include_bytes!("../../levels/5/tiles.png");
+include!(concat!(env!("OUT_DIR"), "/level_data.rs"));
 
 const BOX_EXIT_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
 const PLAYER_EXIT_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
@@ -25,13 +12,13 @@ const PLAYER_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const EMPTY_TILE_COLOR: Color = Color::from_rgba(0, 0, 0, 255);
 
 pub fn load_levels() -> Vec<Level> {
-    vec![
-        load_level(L1_F, L1_T),
-        load_level(L2_F, L2_T),
-        load_level(L3_F, L3_T),
-        load_level(L4_F, L4_T),
-        load_level(L5_F, L5_T),
-    ]
+    let mut levels = Vec::with_capacity(LEVEL_DATA.len());
+
+    for (floor_data, tiles_data) in LEVEL_DATA {
+        levels.push(load_level(floor_data, tiles_data));
+    }
+
+    levels
 }
 
 fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {

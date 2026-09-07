@@ -1,8 +1,9 @@
 use macroquad::{time::get_frame_time, window::next_frame};
 
 use crate::{
-    game_context::GameContext, resource_manager::ResourceManager,
-    service::level_loader::load_levels,
+    game_context::GameContext,
+    resource_manager::ResourceManager,
+    service::{level_loader::load_levels, persistence::load_completed_levels},
 };
 
 mod game_context;
@@ -17,7 +18,8 @@ mod ui;
 async fn main() {
     let resource_manager = ResourceManager::new().await;
     let levels = load_levels();
-    let mut game_context = GameContext::new(&resource_manager, &levels);
+    let completed_levels = load_completed_levels();
+    let mut game_context = GameContext::new(&resource_manager, &levels, completed_levels);
 
     loop {
         let delta = get_frame_time();
