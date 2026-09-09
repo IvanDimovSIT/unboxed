@@ -1,4 +1,15 @@
-use crate::service::movement::MovementDelta;
+use crate::{
+    game_context::Event,
+    graphics::{
+        background::draw_background,
+        draw::{LevelDrawContext, draw_level},
+        level_window::find_level_window_position,
+    },
+    input,
+    resource_manager::{ResourceManager, SoundId},
+    service::{self, movement::MovementDelta},
+    ui::{buttons::draw_back_button, message::display_message},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash)]
 pub enum AboveTile {
@@ -71,6 +82,7 @@ pub struct LevelContext {
 }
 impl LevelContext {
     const PREVIOUS_DELTAS_CAPACITY: usize = 32;
+    const ANIMATION_TIME: f32 = 0.1;
 
     pub fn new(level: Level, index: usize) -> Self {
         Self {
@@ -91,5 +103,96 @@ impl LevelContext {
         self.animation_deltas.clear();
         self.animation_time_s = 0.0;
         self.cached_move = None;
+    }
+
+    pub fn process_level(
+        &mut self,
+        levels_count: usize,
+        resource_manager: &ResourceManager,
+        delta: f32,
+    ) -> Event {
+        if input::exit() {
+            return Event::ToLevelSelect;
+        }
+
+        let result = service::movement::process(self);
+        match result {
+            service::movement::ProcessResult::None => {}
+            service::movement::ProcessResult::Movement(movement_deltas) => {
+                Self::play_sounds_for_deltas(&movement_deltas, resource_manager);
+                self.animation_deltas = movement_deltas.clone();
+                self.animation_time_s = 0.0;
+                self.previous_deltas.push(movement_deltas);
+            }
+            service::movement::ProcessResult::Undo(undo_movement_deltas) => {
+                self.animation_deltas = undo_movement_deltas;
+                self.animation_time_s = 0.0;
+            }
+            service::movement::ProcessResult::Reset => {
+                self.animation_deltas = vec![];
+                self.animation_time_s = 0.0;
+            }
+        }
+
+        if !self.animation_deltas.is_empty() {
+            self.animation_time_s += delta;
+        }
+        if self.animation_time_s >= Self::ANIMATION_TIME {
+            self.animation_deltas = vec![];
+            self.animation_time_s = 0.0;
+        }
+
+        let animation_progress = self.animation_time_s / Self::ANIMATION_TIME;
+        let window_pos = find_level_window_position();
+        draw_background(resource_manager);
+        draw_level(LevelDrawContext {
+            animation_progress,
+            start_x: window_pos.start_x,
+            start_y: window_pos.start_y,
+            width: window_pos.width,
+            level: &self.level,
+            deltas: &self.animation_deltas,
+            resource_manager,
+        });
+
+        if self.is_win {
+            display_message(
+                &["Level complete!", "Press space to continue..."],
+                resource_manager,
+            );
+        }
+
+        if draw_back_button(resource_manager) {
+            return Event::ToLevelSelect;
+        }
+
+        if !self.is_win && service::win_condition::is_win(&self.level) {
+            self.is_win = true;
+            resource_manager.play_sound(SoundId::Win);
+            Event::WinLevel(self.current_level_index)
+        } else if self.is_win && input::next_level() {
+            if self.current_level_index + 1 == levels_count {
+                Event::ToLevelSelect
+            } else {
+                Event::ChangeLevel(self.current_level_index + 1)
+            }
+        } else {
+            Event::None
+        }
+    }
+
+    fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
+        for d in deltas {
+            if d.tile == AboveTile::Box {
+                resource_manager.play_sound(SoundId::PushBox);
+                break;
+            }
+        }
+        for d in deltas {
+            if d.tile == AboveTile::Player {
+                resource_manager.play_sound(SoundId::Move);
+                return;
+            }
+        }
     }
 }
