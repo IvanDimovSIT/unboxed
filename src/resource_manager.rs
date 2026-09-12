@@ -8,6 +8,7 @@ use macroquad::{
 };
 
 use crate::{
+    graphics::shader::Shader,
     level::{AboveTile, FloorTile},
     ui::message::draw_loading_screen,
 };
@@ -53,6 +54,7 @@ pub enum SoundId {
 #[derive(Debug)]
 pub struct ResourceManager {
     pub font: Font,
+    pub shader: Shader,
     pub level_button: Texture2D,
     pub level_button_selected: Texture2D,
     pub back_button: Texture2D,
@@ -75,6 +77,7 @@ impl ResourceManager {
 
         Self {
             font,
+            shader: Shader::new(),
             level_button: Self::load(LEVEL_BUTTON_IMG),
             level_button_selected: Self::load(LEVEL_BUTTON_SELECTED_IMG),
             empty_tile: Self::load(EMPTY_IMG),
