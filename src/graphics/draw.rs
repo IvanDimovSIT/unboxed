@@ -1,14 +1,10 @@
 use std::borrow::Cow;
 
-use macroquad::{
-    color::WHITE,
-    math::{Vec2, vec2},
-    texture::{DrawTextureParams, draw_texture_ex},
-};
+use macroquad::math::{Vec2, vec2};
 
 use crate::{
-    graphics::shader::Light,
-    level::{AboveTile, FloorTile, Level},
+    graphics::{shader::Light, tile_renderer::TileRenderer},
+    level::{AboveTile, Level},
     resource_manager::ResourceManager,
     service::movement::MovementDelta,
 };
@@ -25,9 +21,10 @@ pub struct LevelDrawContext<'a> {
     pub resource_manager: &'a ResourceManager,
 }
 
-pub fn draw_level<'a>(context: &'a LevelDrawContext) -> Vec<Light> {
+pub fn draw_level(context: &LevelDrawContext) -> Vec<Light> {
     let tile_size = calculate_tile_size(context);
     let tile_center_offset = calculate_tile_center_offset(tile_size);
+    let mut tile_renderer = TileRenderer::new();
 
     let level_to_draw = preapare_level_to_draw(context);
     let mut lights = Vec::with_capacity(50);
@@ -42,16 +39,16 @@ pub fn draw_level<'a>(context: &'a LevelDrawContext) -> Vec<Light> {
             if above_tile != AboveTile::None {
                 if above_tile != AboveTile::Wall {
                     let floor_tile = level_to_draw.get_below(x as i32, y as i32);
-                    draw_floor_tile(floor_tile, pos, tile_size, context.resource_manager);
+                    tile_renderer.prepare_floor(floor_tile, pos);
                     Light::from_floor(floor_tile, pos + tile_center_offset)
                         .map(|light| lights.push(light));
                 }
-                draw_above_tile(above_tile, pos, tile_size, context.resource_manager);
+                tile_renderer.prepare_tile(above_tile, pos);
                 Light::from_tile(above_tile, pos + tile_center_offset)
                     .map(|light| lights.push(light));
             } else {
                 let floor_tile = level_to_draw.get_below(x as i32, y as i32);
-                draw_floor_tile(floor_tile, pos, tile_size, context.resource_manager);
+                tile_renderer.prepare_floor(floor_tile, pos);
                 Light::from_floor(floor_tile, pos + tile_center_offset)
                     .map(|light| lights.push(light));
             }
@@ -59,8 +56,10 @@ pub fn draw_level<'a>(context: &'a LevelDrawContext) -> Vec<Light> {
     }
 
     if !context.deltas.is_empty() {
-        draw_animated_tiles(context, &mut lights)
+        draw_animated_tiles(context, &mut tile_renderer, &mut lights)
     };
+
+    tile_renderer.render(tile_size, context.resource_manager);
 
     lights
 }
@@ -73,7 +72,11 @@ fn preapare_level_to_draw<'a>(context: &'a LevelDrawContext) -> Cow<'a, Level> {
     }
 }
 
-fn draw_animated_tiles(context: &LevelDrawContext, lights: &mut Vec<Light>) {
+fn draw_animated_tiles(
+    context: &LevelDrawContext,
+    tile_renderer: &mut TileRenderer,
+    lights: &mut Vec<Light>,
+) {
     assert!(context.animation_progress >= 0.0);
     assert!(context.animation_progress <= 1.0);
 
@@ -88,7 +91,7 @@ fn draw_animated_tiles(context: &LevelDrawContext, lights: &mut Vec<Light>) {
         let pos_x = ((from_x as f32 * r_coef) + (to_x as f32 * coef)) * tile_size + context.start_x;
         let pos_y = ((from_y as f32 * r_coef) + (to_y as f32 * coef)) * tile_size + context.start_y;
         let pos = vec2(pos_x, pos_y);
-        draw_above_tile(d.tile, pos, tile_size, context.resource_manager);
+        tile_renderer.prepare_tile(d.tile, pos);
         Light::from_tile(d.tile, pos + tile_center_offset).map(|light| lights.push(light));
     }
 }
@@ -109,38 +112,4 @@ fn create_level_to_draw(level: &Level, deltas: &[MovementDelta]) -> Level {
     }
 
     new_level
-}
-
-fn draw_above_tile(tile: AboveTile, pos: Vec2, size: f32, resource_manager: &ResourceManager) {
-    if tile == AboveTile::None {
-        return;
-    }
-
-    let texture = resource_manager.get_texture_for_tile(tile);
-
-    draw_texture_ex(
-        texture,
-        pos.x,
-        pos.y,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(Vec2::splat(size)),
-            ..Default::default()
-        },
-    );
-}
-
-fn draw_floor_tile(tile: FloorTile, pos: Vec2, size: f32, resource_manager: &ResourceManager) {
-    let texture = resource_manager.get_texture_for_floor(tile);
-
-    draw_texture_ex(
-        texture,
-        pos.x,
-        pos.y,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(Vec2::splat(size)),
-            ..Default::default()
-        },
-    );
 }

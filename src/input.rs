@@ -1,5 +1,46 @@
 use macroquad::input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed};
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MovementInput {
+    Left,
+    Right,
+    Down,
+    Up,
+    Undo,
+    Reset,
+}
+impl std::fmt::Debug for MovementInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = match self {
+            MovementInput::Left => "Left",
+            MovementInput::Right => "Right",
+            MovementInput::Down => "Down",
+            MovementInput::Up => "Up",
+            MovementInput::Undo => "Undo",
+            MovementInput::Reset => "Reset",
+        };
+        write!(f, "MovementInput::{}", name)
+    }
+}
+
+pub fn get_movement_input() -> Option<MovementInput> {
+    if left() {
+        Some(MovementInput::Left)
+    } else if right() {
+        Some(MovementInput::Right)
+    } else if up() {
+        Some(MovementInput::Up)
+    } else if down() {
+        Some(MovementInput::Down)
+    } else if undo() {
+        Some(MovementInput::Undo)
+    } else if reset() {
+        Some(MovementInput::Reset)
+    } else {
+        None
+    }
+}
+
 pub fn left() -> bool {
     is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left)
 }

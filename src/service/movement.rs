@@ -1,8 +1,9 @@
 use std::{collections::HashSet, mem::swap};
 
 use crate::{
-    input,
-    level::{AboveTile, Level, LevelContext},
+    input::MovementInput,
+    level::{AboveTile, Level},
+    level_context::LevelContext,
 };
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -20,42 +21,29 @@ pub enum ProcessResult {
     Undo(Vec<MovementDelta>),
 }
 
-pub fn process(level_context: &mut LevelContext) -> ProcessResult {
+pub fn process(level_context: &mut LevelContext, movement: Option<MovementInput>) -> ProcessResult {
     if level_context.is_win {
-        level_context.cached_move = None;
         return ProcessResult::None;
     }
 
     let mut is_undo = false;
-    let initial_deltas =
-        if level_context.cached_move.is_some() && level_context.animation_deltas.is_empty() {
-            let cached_deltas =
-                create_player_deltas(&level_context.level, level_context.cached_move.unwrap());
-            level_context.cached_move = None;
-            cached_deltas
-        } else if input::left() {
-            create_initial_movement_deltas_for_input(level_context, (-1, 0))
-        } else if input::right() {
-            create_initial_movement_deltas_for_input(level_context, (1, 0))
-        } else if input::up() {
-            create_initial_movement_deltas_for_input(level_context, (0, -1))
-        } else if input::down() {
-            create_initial_movement_deltas_for_input(level_context, (0, 1))
-        } else if input::undo() {
-            level_context.cached_move = None;
+    let initial_deltas = if let Some(movement_input) = movement {
+        if movement_input == MovementInput::Undo {
             level_context.animation_deltas.clear();
             let mut undo_deltas = level_context.previous_deltas.pop().unwrap_or(vec![]);
             reverse_deltas(&mut undo_deltas);
             is_undo = true;
             undo_deltas
+        } else if movement_input == MovementInput::Reset {
+            level_context.reset();
+            return ProcessResult::Reset;
         } else {
-            vec![]
-        };
-
-    if input::reset() {
-        level_context.reset();
-        return ProcessResult::Reset;
-    }
+            let direction = get_direction_for_movement(movement_input);
+            create_player_deltas(&level_context.level, direction)
+        }
+    } else {
+        vec![]
+    };
 
     if initial_deltas.is_empty() {
         return ProcessResult::None;
@@ -159,14 +147,13 @@ fn remove_dulplicate_deltas(deltas: Vec<MovementDelta>) -> Vec<MovementDelta> {
     set.into_iter().collect()
 }
 
-fn create_initial_movement_deltas_for_input(
-    level_context: &mut LevelContext,
-    direction: (i32, i32),
-) -> Vec<MovementDelta> {
-    if level_context.animation_deltas.is_empty() {
-        create_player_deltas(&level_context.level, direction)
-    } else {
-        level_context.cached_move = Some(direction);
-        vec![]
+fn get_direction_for_movement(movement: MovementInput) -> (i32, i32) {
+    match movement {
+        MovementInput::Left => (-1, 0),
+        MovementInput::Right => (1, 0),
+        MovementInput::Down => (0, 1),
+        MovementInput::Up => (0, -1),
+        MovementInput::Undo => panic!("Undo has no direction"),
+        MovementInput::Reset => panic!("Reset has no direction"),
     }
 }

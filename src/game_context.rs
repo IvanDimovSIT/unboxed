@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
 use crate::{
-    level::{Level, LevelContext},
+    level::Level,
+    level_context::LevelContext,
     resource_manager::ResourceManager,
     service::persistence::save_completed_levels,
     ui::{draw_help::draw_help, draw_level_select::draw_level_select},

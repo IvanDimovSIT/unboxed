@@ -13,6 +13,8 @@ uniform int lightsCount;
 uniform vec2 lightPositions[MAX_LIGHTS];
 uniform vec4 lightColors[MAX_LIGHTS];
 
+const float distortionAmount = 0.09;
+
 vec2 crtDistort(vec2 uv, float distortion) {
     vec2 center = uv - vec2(0.5);
     float dist = dot(center, center);
@@ -21,8 +23,7 @@ vec2 crtDistort(vec2 uv, float distortion) {
 }
 
 void main() {
-    vec2 crtUV = crtDistort(vec2(uv.x, 1.0 - uv.y), 0.025);
-
+    vec2 crtUV = crtDistort(vec2(uv.x, 1.0 - uv.y), distortionAmount);
 
     if (crtUV.x < 0.0 || crtUV.x > 1.0 || crtUV.y < 0.0 || crtUV.y > 1.0) {
         gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
