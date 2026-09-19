@@ -8,18 +8,41 @@ varying vec2 uv;
 
 uniform sampler2D Texture;
 
-uniform float aspectRatio;
+uniform float screenWidth;
+uniform float screenHeight;
 uniform int lightsCount;
 uniform vec2 lightPositions[MAX_LIGHTS];
 uniform vec4 lightColors[MAX_LIGHTS];
 
 const float distortionAmount = 0.09;
 
+const float blurCenterWeight = 0.6;
+const float blurCardinalWeight = 0.075;
+const float blurDiagonalWeight = 0.025;
+
 vec2 crtDistort(vec2 uv, float distortion) {
     vec2 center = uv - vec2(0.5);
     float dist = dot(center, center);
 
     return uv + center * dist * distortion;
+}
+
+vec4 blurTexture(vec2 uv, vec2 texelSize) {
+    vec4 result = vec4(0.0);
+
+    result += texture2D(Texture, uv) * blurCenterWeight;
+
+    result += texture2D(Texture, uv + vec2(texelSize.x, 0.0)) * blurCardinalWeight;
+    result += texture2D(Texture, uv + vec2(-texelSize.x, 0.0)) * blurCardinalWeight;
+    result += texture2D(Texture, uv + vec2(0.0, texelSize.y)) * blurCardinalWeight;
+    result += texture2D(Texture, uv + vec2(0.0, -texelSize.y)) * blurCardinalWeight;
+
+    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
+    result += texture2D(Texture, uv - texelSize) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
+
+    return result;
 }
 
 void main() {
@@ -30,9 +53,12 @@ void main() {
         return;
     }
 
-    vec4 baseColor = texture2D(Texture, crtUV) * color;
+    vec2 texelSize = vec2(1.0 / screenWidth, 1.0 / screenHeight);
+    vec4 baseColor = blurTexture(crtUV, texelSize) * color;
 
     vec3 totalLighting = vec3(0.75);
+
+    float aspectRatio = screenWidth / screenHeight;
 
     for (int i = 0; i < MAX_LIGHTS; i++) {
         if (i >= lightsCount)
@@ -64,7 +90,7 @@ void main() {
     vignette = clamp(vignette, 0.0, 1.0);
 
     vec3 finalRGB =
-    baseColor.rgb * totalLighting;
+        baseColor.rgb * totalLighting;
 
     finalRGB -= scanline;
     finalRGB *= vignette;

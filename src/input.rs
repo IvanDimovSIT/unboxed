@@ -1,6 +1,6 @@
 use macroquad::input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MovementInput {
     Left,
     Right,
@@ -9,17 +9,39 @@ pub enum MovementInput {
     Undo,
     Reset,
 }
-impl std::fmt::Debug for MovementInput {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let name = match self {
-            MovementInput::Left => "Left",
-            MovementInput::Right => "Right",
-            MovementInput::Down => "Down",
-            MovementInput::Up => "Up",
-            MovementInput::Undo => "Undo",
-            MovementInput::Reset => "Reset",
-        };
-        write!(f, "MovementInput::{}", name)
+impl MovementInput {
+    #[cfg(debug_assertions)]
+    pub fn slice_to_string(slice: &[MovementInput]) -> String {
+        slice.iter().copied().map(Self::to_code).collect()
+    }
+
+    #[cfg(test)]
+    pub fn from_string(string: &str) -> Vec<MovementInput> {
+        string.chars().map(Self::from_code).collect()
+    }
+
+    fn to_code(self) -> char {
+        match self {
+            MovementInput::Left => 'l',
+            MovementInput::Right => 'r',
+            MovementInput::Down => 'd',
+            MovementInput::Up => 'u',
+            MovementInput::Undo => 'z',
+            MovementInput::Reset => 'R',
+        }
+    }
+
+    #[cfg(test)]
+    fn from_code(code: char) -> MovementInput {
+        match code {
+            'l' => MovementInput::Left,
+            'r' => MovementInput::Right,
+            'u' => MovementInput::Up,
+            'd' => MovementInput::Down,
+            'z' => MovementInput::Undo,
+            'R' => MovementInput::Reset,
+            _ => panic!("Unrecognised code"),
+        }
     }
 }
 

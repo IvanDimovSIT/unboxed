@@ -13,7 +13,10 @@ use crate::{
 
 pub fn draw_help(resource_manager: &ResourceManager) -> Event {
     let (width, height) = screen_size();
-    draw_background(resource_manager);
+    resource_manager.shader.use_shader(width, height, || {
+        draw_background(resource_manager);
+        vec![]
+    });
 
     let is_go_to_level_select = draw_back_button(resource_manager) || input::exit();
 

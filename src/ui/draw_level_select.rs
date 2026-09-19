@@ -22,14 +22,19 @@ const TITLE_SIZE_COEF: f32 = 0.08;
 const BUTTONS_PER_ROW: usize = 8;
 const BUTTONS_SIZE_COEF: f32 = 0.05;
 const MARGIN_COEF: f32 = 0.01;
+const CHECKMARK_SIZE_OF_BUTTON: f32 = 0.45;
+const CHECKMARK_OFFSET_COEF: f32 = 0.2;
 
 pub fn draw_level_select(
     levels_count: usize,
     completed_levels: &HashSet<usize>,
     resource_manager: &ResourceManager,
 ) -> Event {
-    draw_background(resource_manager);
     let (width, height) = screen_size();
+    resource_manager.shader.use_shader(width, height, || {
+        draw_background(resource_manager);
+        vec![]
+    });
     let button_size = BUTTONS_SIZE_COEF * width;
     let margin = MARGIN_COEF * width;
     draw_centered_text("Unboxed", TITLE_Y_COEF, TITLE_SIZE_COEF, resource_manager);
@@ -43,7 +48,8 @@ pub fn draw_level_select(
         resource_manager,
         mouse_pos: vec2(mouse_x, mouse_y),
     };
-    let checkmark_size = button_size * 0.4;
+    let checkmark_size = button_size * CHECKMARK_SIZE_OF_BUTTON;
+    let checkmark_offset = checkmark_size * CHECKMARK_OFFSET_COEF;
 
     let mut selected_level = None;
     let mut text_buffer = String::with_capacity(3);
@@ -62,8 +68,8 @@ pub fn draw_level_select(
         if completed_levels.contains(&i) {
             draw_texture_ex(
                 &resource_manager.checkmark,
-                x + button_size - checkmark_size,
-                y,
+                x + button_size - checkmark_size + checkmark_offset,
+                y - checkmark_offset,
                 WHITE,
                 DrawTextureParams {
                     dest_size: Some(Vec2::splat(checkmark_size)),

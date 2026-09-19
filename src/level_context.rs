@@ -1,13 +1,6 @@
+use macroquad::miniquad::window::screen_size;
 #[cfg(debug_assertions)]
 use macroquad::prelude::info;
-use macroquad::{
-    camera::{Camera2D, set_camera, set_default_camera},
-    color::WHITE,
-    math::Rect,
-    miniquad::window::screen_size,
-    prelude::gl_use_default_material,
-    texture::{draw_texture, render_target},
-};
 
 use crate::{
     game_context::Event,
@@ -129,7 +122,10 @@ impl LevelContext {
             self.is_win = true;
             resource_manager.play_sound(SoundId::Win);
             #[cfg(debug_assertions)]
-            info!("Winning moves: {:?}", self.inputs);
+            info!(
+                "Winning moves: {}",
+                MovementInput::slice_to_string(&self.inputs)
+            );
             Event::WinLevel(self.current_level_index)
         } else if self.is_win && input::next_level() {
             if self.current_level_index + 1 == levels_count {
@@ -170,31 +166,20 @@ impl LevelContext {
         let animation_progress = self.animation_time_s / Self::ANIMATION_TIME;
         let window_pos = find_level_window_position();
         let (width, height) = screen_size();
-        let render_target = render_target(width as u32, height as u32);
-        render_target
-            .texture
-            .set_filter(macroquad::texture::FilterMode::Nearest);
-        let mut camera = Camera2D::from_display_rect(Rect::new(0.0, 0.0, width, height));
-        camera.render_target = Some(render_target.clone());
-        set_camera(&camera);
+        resource_manager.shader.use_shader(width, height, || {
+            draw_background(resource_manager);
+            let level_draw_context = LevelDrawContext {
+                animation_progress,
+                start_x: window_pos.start_x,
+                start_y: window_pos.start_y,
+                width: window_pos.width,
+                level: &self.level,
+                deltas: &self.animation_deltas,
+                resource_manager,
+            };
 
-        draw_background(resource_manager);
-        let level_draw_context = LevelDrawContext {
-            animation_progress,
-            start_x: window_pos.start_x,
-            start_y: window_pos.start_y,
-            width: window_pos.width,
-            level: &self.level,
-            deltas: &self.animation_deltas,
-            resource_manager,
-        };
-        let lights = draw_level(&level_draw_context);
-        set_default_camera();
-        macroquad::window::clear_background(WHITE);
-
-        resource_manager.shader.set_shader(&lights, width, height);
-        draw_texture(&render_target.texture, 0.0, 0.0, WHITE);
-        gl_use_default_material();
+            draw_level(&level_draw_context)
+        });
     }
 
     fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
