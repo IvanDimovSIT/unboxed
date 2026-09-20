@@ -7,6 +7,7 @@ include!(concat!(env!("OUT_DIR"), "/level_data.rs"));
 const BOX_EXIT_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
 const PLAYER_EXIT_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const BOX_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
+const PULL_BOX_COLOR: Color = Color::from_rgba(0, 0, 255, 255);
 const WALL_COLOR: Color = Color::from_rgba(255, 255, 255, 255);
 const PLAYER_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const EMPTY_TILE_COLOR: Color = Color::from_rgba(0, 0, 0, 255);
@@ -62,6 +63,8 @@ fn color_to_floor(color: Color) -> FloorTile {
 fn color_to_tile(color: Color) -> AboveTile {
     if color == BOX_COLOR {
         AboveTile::Box
+    } else if color == PULL_BOX_COLOR {
+        AboveTile::PullBox
     } else if color == WALL_COLOR {
         AboveTile::Wall
     } else if color == PLAYER_COLOR {

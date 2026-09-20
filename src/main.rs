@@ -9,6 +9,7 @@ use crate::{
 mod game_context;
 mod graphics;
 mod input;
+mod ivec2;
 mod level;
 mod level_context;
 mod resource_manager;

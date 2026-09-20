@@ -19,6 +19,7 @@ const PLAYER_EXIT_IMG: &[u8] = include_bytes!("../resources/images/player_exit.p
 const WALL_IMG: &[u8] = include_bytes!("../resources/images/wall.png");
 const PALYER_IMG: &[u8] = include_bytes!("../resources/images/player.png");
 const BOX_IMG: &[u8] = include_bytes!("../resources/images/box.png");
+const PULL_BOX_IMG: &[u8] = include_bytes!("../resources/images/pull_box.png");
 
 const LEVEL_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/level_button.png");
 const LEVEL_BUTTON_SELECTED_IMG: &[u8] =
@@ -68,6 +69,7 @@ pub struct ResourceManager {
     wall_tile: Texture2D,
     player_tile: Texture2D,
     box_tile: Texture2D,
+    pull_box_tile: Texture2D,
 }
 impl ResourceManager {
     pub async fn new() -> Self {
@@ -86,6 +88,7 @@ impl ResourceManager {
             wall_tile: Self::load(WALL_IMG),
             player_tile: Self::load(PALYER_IMG),
             box_tile: Self::load(BOX_IMG),
+            pull_box_tile: Self::load(PULL_BOX_IMG),
             background: Self::load(BACKGROUND_IMG),
             sounds: Self::load_sounds().await,
             back_button: Self::load(BACK_BUTTON_IMG),
@@ -113,6 +116,7 @@ impl ResourceManager {
             AboveTile::Player => &self.player_tile,
             AboveTile::Box => &self.box_tile,
             AboveTile::Wall => &self.wall_tile,
+            AboveTile::PullBox => &self.pull_box_tile,
         }
     }
 

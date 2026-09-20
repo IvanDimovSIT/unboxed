@@ -11,8 +11,7 @@ use crate::{
 
 #[derive(Debug, Clone, Copy)]
 pub struct LevelDrawContext<'a> {
-    pub start_x: f32,
-    pub start_y: f32,
+    pub top_left: Vec2,
     pub width: f32,
     /// values: [0.0 - 1.0]
     pub animation_progress: f32,
@@ -31,9 +30,7 @@ pub fn draw_level(context: &LevelDrawContext) -> Vec<Light> {
 
     for y in 0..Level::LEVEL_HEIGHT {
         for x in 0..Level::LEVEL_WIDTH {
-            let pos_x = x as f32 * tile_size + context.start_x;
-            let pos_y = y as f32 * tile_size + context.start_y;
-            let pos = vec2(pos_x, pos_y);
+            let pos = vec2(x as f32, y as f32) * tile_size + context.top_left;
             let above_tile = level_to_draw.get_above(x as i32, y as i32);
 
             if above_tile != AboveTile::None {
@@ -85,12 +82,11 @@ fn draw_animated_tiles(
     let coef = context.animation_progress;
     let r_coef = 1.0 - context.animation_progress;
     for d in context.deltas {
-        let (from_x, from_y) = d.from;
-        let (to_x, to_y) = d.to;
+        let from: Vec2 = d.from.into();
+        let to: Vec2 = d.to.into();
 
-        let pos_x = ((from_x as f32 * r_coef) + (to_x as f32 * coef)) * tile_size + context.start_x;
-        let pos_y = ((from_y as f32 * r_coef) + (to_y as f32 * coef)) * tile_size + context.start_y;
-        let pos = vec2(pos_x, pos_y);
+        let pos = (from * r_coef + (to * coef)) * tile_size + context.top_left;
+
         tile_renderer.prepare_tile(d.tile, pos);
         Light::from_tile(d.tile, pos + tile_center_offset).map(|light| lights.push(light));
     }
@@ -107,8 +103,7 @@ fn calculate_tile_size(context: &LevelDrawContext) -> f32 {
 fn create_level_to_draw(level: &Level, deltas: &[MovementDelta]) -> Level {
     let mut new_level = level.clone();
     for d in deltas {
-        let (x, y) = d.to;
-        new_level.set_above(AboveTile::None, x, y);
+        new_level.set_above(AboveTile::None, d.to.x, d.to.y);
     }
 
     new_level

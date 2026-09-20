@@ -1,6 +1,6 @@
-use macroquad::miniquad::window::screen_size;
 #[cfg(debug_assertions)]
 use macroquad::prelude::info;
+use macroquad::{math::vec2, miniquad::window::screen_size};
 
 use crate::{
     game_context::Event,
@@ -170,8 +170,7 @@ impl LevelContext {
             draw_background(resource_manager);
             let level_draw_context = LevelDrawContext {
                 animation_progress,
-                start_x: window_pos.start_x,
-                start_y: window_pos.start_y,
+                top_left: vec2(window_pos.start_x, window_pos.start_y),
                 width: window_pos.width,
                 level: &self.level,
                 deltas: &self.animation_deltas,
@@ -184,7 +183,7 @@ impl LevelContext {
 
     fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
         for d in deltas {
-            if d.tile == AboveTile::Box {
+            if d.tile.is_box() {
                 resource_manager.play_sound(SoundId::PushBox);
                 break;
             }

@@ -5,6 +5,12 @@ pub enum AboveTile {
     Player,
     Box,
     Wall,
+    PullBox,
+}
+impl AboveTile {
+    pub fn is_box(self) -> bool {
+        self == AboveTile::Box || self == AboveTile::PullBox
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, PartialOrd, Ord)]

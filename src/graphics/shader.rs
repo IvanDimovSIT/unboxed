@@ -73,7 +73,6 @@ impl Shader {
                 fragment: FRAGMENT_SHADER,
             },
             MaterialParams {
-                pipeline_params: Default::default(),
                 uniforms: vec![
                     light_positions_uniform,
                     light_colors_uniform,

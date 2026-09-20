@@ -8,7 +8,7 @@ pub fn is_win(level: &Level) -> bool {
                 FloorTile::None => continue,
                 FloorTile::BoxExit => {
                     let tile = level.get_above(x, y);
-                    if tile != AboveTile::Box {
+                    if !tile.is_box() {
                         return false;
                     }
                 }
