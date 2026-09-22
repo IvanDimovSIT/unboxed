@@ -90,7 +90,7 @@ impl Shader {
 
     pub fn use_shader<F>(&self, screen_width: f32, screen_height: f32, draw_fn: F)
     where
-        F: Fn() -> Vec<Light>,
+        F: FnOnce() -> Vec<Light>,
     {
         let render_target = render_target(screen_width as u32, screen_height as u32);
         render_target

@@ -12,7 +12,10 @@ use crate::{
     input::{self, MovementInput},
     level::{AboveTile, Level},
     resource_manager::{ResourceManager, SoundId},
-    service::{self, movement::MovementDelta},
+    service::{
+        self,
+        movement::{self, MovementDelta},
+    },
     ui::{buttons::draw_back_button, message::display_message},
 };
 
@@ -22,15 +25,15 @@ pub struct LevelContext {
     cached_move: Option<MovementInput>,
     #[cfg(debug_assertions)]
     inputs: Vec<MovementInput>,
-    pub level: Level,
-    pub previous_deltas: Vec<Vec<MovementDelta>>,
-    pub animation_time_s: f32,
-    pub animation_deltas: Vec<MovementDelta>,
-    pub current_level_index: usize,
-    pub is_win: bool,
+    level: Level,
+    previous_deltas: Vec<Vec<MovementDelta>>,
+    animation_time_s: f32,
+    animation_deltas: Vec<MovementDelta>,
+    current_level_index: usize,
+    is_win: bool,
 }
 impl LevelContext {
-    const PREVIOUS_DELTAS_CAPACITY: usize = 32;
+    const PREVIOUS_DELTAS_CAPACITY: usize = 64;
     const ANIMATION_TIME: f32 = 0.1;
 
     pub fn new(level: Level, index: usize) -> Self {
@@ -69,31 +72,13 @@ impl LevelContext {
         }
 
         let movement_input = self.get_movement();
-        #[cfg(debug_assertions)]
         if let Some(movement) = movement_input {
             if movement == MovementInput::Undo {
-                self.inputs.pop();
-            } else if movement != MovementInput::Reset {
-                self.inputs.push(movement);
-            }
-        }
-
-        let result = service::movement::process(self, movement_input);
-        match result {
-            service::movement::ProcessResult::None => {}
-            service::movement::ProcessResult::Movement(movement_deltas) => {
-                Self::play_sounds_for_deltas(&movement_deltas, resource_manager);
-                self.animation_deltas = movement_deltas.clone();
-                self.animation_time_s = 0.0;
-                self.previous_deltas.push(movement_deltas);
-            }
-            service::movement::ProcessResult::Undo(undo_movement_deltas) => {
-                self.animation_deltas = undo_movement_deltas;
-                self.animation_time_s = 0.0;
-            }
-            service::movement::ProcessResult::Reset => {
-                self.animation_deltas = vec![];
-                self.animation_time_s = 0.0;
+                self.undo();
+            } else if movement == MovementInput::Reset {
+                self.reset();
+            } else {
+                self.handle_move(movement, resource_manager);
             }
         }
 
@@ -135,6 +120,33 @@ impl LevelContext {
             }
         } else {
             Event::None
+        }
+    }
+
+    fn undo(&mut self) {
+        if let Some(prev_deltas) = self.previous_deltas.pop() {
+            let undo_deltas = movement::undo_deltas(&mut self.level, prev_deltas);
+            self.animation_deltas = undo_deltas;
+            self.animation_time_s = 0.0;
+            self.cached_move = None;
+            #[cfg(debug_assertions)]
+            self.inputs.pop();
+        }
+    }
+
+    fn handle_move(&mut self, movement: MovementInput, resource_manager: &ResourceManager) {
+        assert!(matches!(
+            movement,
+            MovementInput::Left | MovementInput::Right | MovementInput::Up | MovementInput::Down
+        ));
+        let movement_deltas = service::movement::process(&mut self.level, movement);
+        if !movement_deltas.is_empty() {
+            #[cfg(debug_assertions)]
+            self.inputs.push(movement);
+            Self::play_sounds_for_deltas(&movement_deltas, resource_manager);
+            self.animation_deltas = movement_deltas.clone();
+            self.animation_time_s = 0.0;
+            self.previous_deltas.push(movement_deltas);
         }
     }
 

@@ -1,10 +1,11 @@
 use std::{collections::HashSet, mem::swap};
 
+use macroquad::prelude::warn;
+
 use crate::{
     input::MovementInput,
     ivec2::Ivec2,
     level::{AboveTile, Level},
-    level_context::LevelContext,
 };
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -14,55 +15,42 @@ pub struct MovementDelta {
     pub to: Ivec2,
 }
 
-#[derive(Debug, Clone)]
-pub enum ProcessResult {
-    None,
-    Movement(Vec<MovementDelta>),
-    Reset,
-    Undo(Vec<MovementDelta>),
-}
-
-pub fn process(level_context: &mut LevelContext, movement: Option<MovementInput>) -> ProcessResult {
-    if level_context.is_win {
-        return ProcessResult::None;
-    }
-
-    let initial_deltas = if let Some(movement_input) = movement {
-        if movement_input == MovementInput::Undo {
-            level_context.animation_deltas.clear();
-            let mut undo_deltas = level_context.previous_deltas.pop().unwrap_or(vec![]);
-            reverse_deltas(&mut undo_deltas);
-            apply_deltas(&mut level_context.level, &undo_deltas);
-            return ProcessResult::Undo(undo_deltas);
-        } else if movement_input == MovementInput::Reset {
-            level_context.reset();
-            return ProcessResult::Reset;
-        } else {
-            let direction = get_direction_for_movement(movement_input);
-            create_player_deltas(&level_context.level, direction)
-        }
-    } else {
-        vec![]
-    };
+pub fn process(level: &mut Level, movement_input: MovementInput) -> Vec<MovementDelta> {
+    let direction = get_direction_for_movement(movement_input);
+    let initial_deltas = create_initial_deltas(&level, direction);
 
     if initial_deltas.is_empty() {
-        return ProcessResult::None;
+        return vec![];
     }
 
     let movement_deltas = remove_dulplicate_deltas(create_movement_deltas(
         &initial_deltas,
         &initial_deltas,
-        &level_context.level,
+        level,
     ));
     if movement_deltas.is_empty() {
-        return ProcessResult::None;
+        return vec![];
     }
 
-    apply_deltas(&mut level_context.level, &movement_deltas);
-    ProcessResult::Movement(movement_deltas)
+    apply_deltas(level, &movement_deltas);
+    movement_deltas
 }
 
-fn create_player_deltas(level: &Level, delta: Ivec2) -> Vec<MovementDelta> {
+/// returns the undo deltas
+pub fn undo_deltas(
+    level: &mut Level,
+    mut deltas_to_undo: Vec<MovementDelta>,
+) -> Vec<MovementDelta> {
+    if deltas_to_undo.is_empty() {
+        warn!("Received empty deltas to undo");
+    }
+    reverse_deltas(&mut deltas_to_undo);
+    apply_deltas(level, &mut deltas_to_undo);
+
+    deltas_to_undo
+}
+
+fn create_initial_deltas(level: &Level, delta: Ivec2) -> Vec<MovementDelta> {
     let mut player_deltas = vec![];
     for y in 0..Level::LEVEL_HEIGHT as i32 {
         for x in 0..Level::LEVEL_WIDTH as i32 {

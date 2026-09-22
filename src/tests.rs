@@ -3,8 +3,11 @@ use std::sync::LazyLock;
 use crate::{
     input::MovementInput,
     level::Level,
-    level_context::LevelContext,
-    service::{level_loader, movement, win_condition::is_win},
+    service::{
+        level_loader,
+        movement::{self, MovementDelta},
+        win_condition::is_win,
+    },
 };
 
 static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(level_loader::load_levels);
@@ -12,16 +15,43 @@ static LEVELS: LazyLock<Vec<Level>> = LazyLock::new(level_loader::load_levels);
 fn test_level_solution(level_num: usize, input_codes: &str) {
     let level_index = level_num - 1;
     let inputs = MovementInput::from_string(input_codes);
-    let mut level_context = LevelContext::new(LEVELS[level_index].clone(), level_index);
+    let mut level = LEVELS[level_index].clone();
+    let original_level = level.clone();
 
+    let mut deltas_vec = Vec::with_capacity(inputs.len());
     for input in inputs {
-        assert!(
-            !is_win(&level_context.level),
-            "Level has been won earlier than expected"
-        );
-        movement::process(&mut level_context, Some(input));
+        assert!(!is_win(&level), "Level has been won earlier than expected");
+        let level_copy = level.clone();
+        let deltas = movement::process(&mut level, input);
+        validate_undo(level.clone(), &level_copy, deltas.clone());
+        deltas_vec.push(deltas);
     }
-    assert!(is_win(&level_context.level), "Level has not been won");
+    assert!(is_win(&level), "Level has not been won");
+
+    validate_full_undo(level, &original_level, deltas_vec);
+}
+
+fn validate_undo(
+    mut current_level_state: Level,
+    previous_level_state: &Level,
+    deltas_to_undo: Vec<MovementDelta>,
+) {
+    movement::undo_deltas(&mut current_level_state, deltas_to_undo);
+    assert_eq!(*previous_level_state, current_level_state, "Undo failed");
+}
+
+fn validate_full_undo(
+    mut end_level_state: Level,
+    original_level_state: &Level,
+    deltas_vec: Vec<Vec<MovementDelta>>,
+) {
+    for deltas_to_undo in deltas_vec.into_iter().rev() {
+        movement::undo_deltas(&mut end_level_state, deltas_to_undo);
+    }
+    assert_eq!(
+        *original_level_state, end_level_state,
+        "Undo from end to start failed"
+    );
 }
 
 #[test]
