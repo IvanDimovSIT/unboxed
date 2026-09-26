@@ -86,7 +86,7 @@ impl LevelContext {
             self.animation_time_s += delta;
         }
         if self.animation_time_s >= Self::ANIMATION_TIME {
-            self.animation_deltas = vec![];
+            self.animation_deltas.clear();
             self.animation_time_s = 0.0;
         }
 

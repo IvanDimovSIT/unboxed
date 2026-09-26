@@ -8,8 +8,8 @@ varying vec2 uv;
 
 uniform sampler2D Texture;
 
-uniform float screenWidth;
-uniform float screenHeight;
+uniform mediump float screenWidth;
+uniform mediump float screenHeight;
 uniform int lightsCount;
 uniform vec2 lightPositions[MAX_LIGHTS];
 uniform vec4 lightColors[MAX_LIGHTS];
@@ -37,10 +37,10 @@ vec4 blurTexture(vec2 uv, vec2 texelSize) {
     result += texture2D(Texture, uv + vec2(0.0, texelSize.y)) * blurCardinalWeight;
     result += texture2D(Texture, uv + vec2(0.0, -texelSize.y)) * blurCardinalWeight;
 
-    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
-    result += texture2D(Texture, uv - texelSize) * blurDiagonalWeight;
-    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
-    result += texture2D(Texture, uv + texelSize) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + vec2(texelSize.x, texelSize.y)) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + vec2(-texelSize.x, texelSize.y)) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + vec2(texelSize.x, -texelSize.y)) * blurDiagonalWeight;
+    result += texture2D(Texture, uv + vec2(-texelSize.x, -texelSize.y)) * blurDiagonalWeight;
 
     return result;
 }
@@ -77,7 +77,7 @@ void main() {
 
         float attenuation = clamp(1.0 - dist / radius, 0.0, 1.0);
 
-        attenuation = pow(attenuation, 2.0);
+        attenuation = attenuation * attenuation;
         totalLighting += lightColor * attenuation * 0.85;
     }
 
@@ -89,8 +89,7 @@ void main() {
 
     vignette = clamp(vignette, 0.0, 1.0);
 
-    vec3 finalRGB =
-        baseColor.rgb * totalLighting;
+    vec3 finalRGB = baseColor.rgb * totalLighting;
 
     finalRGB -= scanline;
     finalRGB *= vignette;

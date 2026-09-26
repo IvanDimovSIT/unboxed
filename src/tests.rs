@@ -126,3 +126,9 @@ fn test_level11() {
     let inputs = "dlddruudrrrrruuuullluldllurulddrrurrrrrdldddddlulllllllldrrrululuuurrrrrrrrdddlldlllllllluuddrurrrdrrrruuuullluldlllururdrrrdldd";
     test_level_solution(11, inputs);
 }
+
+#[test]
+fn test_level12() {
+    let inputs = "rrruuurullulllrrrdldrruldurdllllulllllrrrrrulurdrrrulllldurdddrrullllrrdrrdddlldllddulllldrdduuluurrurruurrrrdludlluurrullddrrdludlulllllluulrrrrddddrrrdlluulrdullululurrrlrulldddrdluuluulurrlrdlddddluulurruuuurullllrrrdrruuuullrrddddllurdruuudlllllrrrulrddrlllllldrdrdrrddddllululluurrldrrludruruuudllurdrrlulurdruuudllllrdrrddddlllldludllurrrrruuuruldluuurrdlll";
+    test_level_solution(12, inputs);
+}
