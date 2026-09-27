@@ -31,12 +31,13 @@ pub struct LevelContext {
     animation_deltas: Vec<MovementDelta>,
     current_level_index: usize,
     is_win: bool,
+    show_controls: bool,
 }
 impl LevelContext {
     const PREVIOUS_DELTAS_CAPACITY: usize = 64;
     const ANIMATION_TIME: f32 = 0.1;
 
-    pub fn new(level: Level, index: usize) -> Self {
+    pub fn new(level: Level, index: usize, show_controls: bool) -> Self {
         Self {
             level_template: level.clone(),
             level,
@@ -48,6 +49,7 @@ impl LevelContext {
             cached_move: None,
             #[cfg(debug_assertions)]
             inputs: vec![],
+            show_controls,
         }
     }
 
@@ -73,6 +75,7 @@ impl LevelContext {
 
         let movement_input = self.get_movement();
         if let Some(movement) = movement_input {
+            self.show_controls = false;
             if movement == MovementInput::Undo {
                 self.undo();
             } else if movement == MovementInput::Reset {
@@ -92,12 +95,7 @@ impl LevelContext {
 
         self.draw_level(resource_manager);
 
-        if self.is_win {
-            display_message(
-                &["Level complete!", "Press space to continue..."],
-                resource_manager,
-            );
-        }
+        self.show_messages(resource_manager);
 
         if draw_back_button(resource_manager) {
             return Event::ToLevelSelect;
@@ -120,6 +118,20 @@ impl LevelContext {
             }
         } else {
             Event::None
+        }
+    }
+
+    fn show_messages(&self, resource_manager: &ResourceManager) {
+        if self.is_win {
+            display_message(
+                &["Level complete!", "Press space to continue..."],
+                resource_manager,
+            );
+        } else if self.show_controls {
+            display_message(
+                &["W/S/A/D - Move", "Z - Undo", "R - Reset"],
+                resource_manager,
+            );
         }
     }
 

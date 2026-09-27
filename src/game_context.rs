@@ -61,10 +61,12 @@ impl<'a> GameContext<'a> {
         match event {
             Event::None => {}
             Event::ChangeLevel(new_level) => {
+                let show_controls = self.completed_levels.is_empty();
                 if new_level < self.level_templates.len() {
                     self.mode = Mode::InLevel(LevelContext::new(
                         self.level_templates[new_level].clone(),
                         new_level,
+                        show_controls,
                     ))
                 }
             }

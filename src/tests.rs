@@ -132,3 +132,9 @@ fn test_level12() {
     let inputs = "rrruuurullulllrrrdldrruldurdllllulllllrrrrrulurdrrrulllldurdddrrullllrrdrrdddlldllddulllldrdduuluurrurruurrrrdludlluurrullddrrdludlulllllluulrrrrddddrrrdlluulrdullululurrrlrulldddrdluuluulurrlrdlddddluulurruuuurullllrrrdrruuuullrrddddllurdruuudlllllrrrulrddrlllllldrdrdrrddddllululluurrldrrludruruuudllurdrrlulurdruuudllllrdrrddddlllldludllurrrrruuuruldluuurrdlll";
     test_level_solution(12, inputs);
 }
+
+#[test]
+fn test_level13() {
+    let inputs = "rddllrrrlldlddddrruldluulludrrurrurlurlldlulrruurruurrdudlluuuulddddrurdldddddrddlllurlldrrrruruulddrdllulrdllulrd";
+    test_level_solution(13, inputs);
+}
