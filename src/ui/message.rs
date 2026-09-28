@@ -1,7 +1,8 @@
 use macroquad::{
     color::{BLACK, Color},
+    math::{Rect, Vec2, vec2},
     miniquad::window::screen_size,
-    shapes::draw_rectangle,
+    shapes::{DrawRectangleParams, draw_rectangle, draw_rectangle_lines_ex},
     text::{Font, TextDimensions, TextParams, draw_text_ex, measure_text},
     window::clear_background,
 };
@@ -13,7 +14,8 @@ const TEXT_SHADOW_COLOR: Color = Color::from_rgba(255, 255, 255, 70);
 
 pub fn display_message(messages: &[&str], resource_manager: &ResourceManager) {
     const SIZE_COEF: f32 = 0.05;
-    const BACKGROUND_COLOR: Color = Color::from_rgba(0, 0, 0, 100);
+    const MARGIN_COEF: f32 = 0.4;
+    const EXTRA_LINE_SPACE_COEF: f32 = 1.2;
     let (screen_width, screen_height) = screen_size();
     if messages.is_empty() {
         return;
@@ -27,19 +29,18 @@ pub fn display_message(messages: &[&str], resource_manager: &ResourceManager) {
         text_dimensions_arr[index] = text_dimensions;
         max_width = max_width.max(text_dimensions.width);
     }
-    let text_height = text_dimensions_arr[0].height;
+    let text_height = text_dimensions_arr[0].height * EXTRA_LINE_SPACE_COEF;
     let start_y = (screen_height - text_height * messages.len() as f32) / 2.0;
     let start_x = (screen_width - max_width) / 2.0;
-    let margin = text_height * 0.2;
+    let margin = text_height * MARGIN_COEF;
     let background_width = max_width + margin * 2.0;
     let background_height = text_height * messages.len() as f32 + margin * 2.0;
-    draw_rectangle(
+    draw_message_background(Rect::new(
         start_x - margin,
         start_y - margin - text_dimensions_arr[0].offset_y,
         background_width,
         background_height,
-        BACKGROUND_COLOR,
-    );
+    ));
 
     for (line, message) in messages.iter().enumerate() {
         let text_dimensions = text_dimensions_arr[line];
@@ -49,6 +50,95 @@ pub fn display_message(messages: &[&str], resource_manager: &ResourceManager) {
 
         draw_text_with_shadow(message, x, y, text_size, resource_manager);
     }
+}
+
+fn draw_message_background(backgroud_rect: Rect) {
+    const BORDER_SIZE1: f32 = 8.0;
+    const BORDER_COLOR1: Color = Color::from_rgba(210, 215, 31, 255);
+    const BORDER_SIZE2: f32 = 4.0;
+    const BORDER_COLOR2: Color = Color::from_rgba(0, 0, 0, 255);
+    const BACKGROUND_COLOR: Color = Color::from_rgba(0, 0, 0, 100);
+    const CORNER_SQUARE_SIZE: f32 = 18.0;
+    const CORNER_BORDER_SIZE: f32 = BORDER_SIZE2;
+
+    draw_rectangle(
+        backgroud_rect.x,
+        backgroud_rect.y,
+        backgroud_rect.w,
+        backgroud_rect.h,
+        BACKGROUND_COLOR,
+    );
+
+    draw_rectangle_lines_ex(
+        backgroud_rect.x,
+        backgroud_rect.y,
+        backgroud_rect.w,
+        backgroud_rect.h,
+        BORDER_SIZE1,
+        DrawRectangleParams {
+            color: BORDER_COLOR1,
+            ..Default::default()
+        },
+    );
+
+    draw_rectangle_lines_ex(
+        backgroud_rect.x,
+        backgroud_rect.y,
+        backgroud_rect.w,
+        backgroud_rect.h,
+        BORDER_SIZE2,
+        DrawRectangleParams {
+            color: BORDER_COLOR2,
+            ..Default::default()
+        },
+    );
+
+    let corners = [
+        vec2(backgroud_rect.x, backgroud_rect.y),
+        vec2(
+            backgroud_rect.x + backgroud_rect.w - CORNER_SQUARE_SIZE,
+            backgroud_rect.y,
+        ),
+        vec2(
+            backgroud_rect.x,
+            backgroud_rect.y + backgroud_rect.h - CORNER_SQUARE_SIZE,
+        ),
+        vec2(
+            backgroud_rect.x + backgroud_rect.w - CORNER_SQUARE_SIZE,
+            backgroud_rect.y + backgroud_rect.h - CORNER_SQUARE_SIZE,
+        ),
+    ];
+
+    for corner in corners {
+        draw_square_with_border(
+            corner,
+            CORNER_SQUARE_SIZE,
+            CORNER_BORDER_SIZE,
+            BORDER_COLOR1,
+            BORDER_COLOR2,
+        );
+    }
+}
+
+fn draw_square_with_border(
+    top_left: Vec2,
+    size: f32,
+    border_size: f32,
+    color: Color,
+    border_color: Color,
+) {
+    draw_rectangle(top_left.x, top_left.y, size, size, color);
+    draw_rectangle_lines_ex(
+        top_left.x,
+        top_left.y,
+        size,
+        size,
+        border_size,
+        DrawRectangleParams {
+            color: border_color,
+            ..Default::default()
+        },
+    );
 }
 
 pub fn draw_centered_text(text: &str, y_coef: f32, size: f32, resource_manager: &ResourceManager) {
