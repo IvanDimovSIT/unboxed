@@ -22,7 +22,7 @@ mod ui;
 async fn main() {
     let resource_manager = ResourceManager::new().await;
     let levels = load_levels();
-    let completed_levels = load_completed_levels();
+    let completed_levels = load_completed_levels(levels.len());
     let mut game_context = GameContext::new(&resource_manager, &levels, completed_levels);
 
     loop {

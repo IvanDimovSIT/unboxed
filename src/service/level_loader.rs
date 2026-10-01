@@ -27,10 +27,16 @@ fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {
         Image::from_file_with_format(f_bytes, None).expect("Failed to load floor tiles");
     let tiles_image = Image::from_file_with_format(t_bytes, None).expect("Failed to load tiles");
     if floor_image.width() != Level::LEVEL_WIDTH {
-        error!("Invalid level width {}", floor_image.width());
+        error!("Invalid level floor width {}", floor_image.width());
     }
     if floor_image.height() != Level::LEVEL_HEIGHT {
-        error!("Invalid level height {}", floor_image.height());
+        error!("Invalid level floor height {}", floor_image.height());
+    }
+    if tiles_image.width() != Level::LEVEL_WIDTH {
+        error!("Invalid level tiles width {}", tiles_image.width());
+    }
+    if tiles_image.height() != Level::LEVEL_HEIGHT {
+        error!("Invalid level tiles height {}", tiles_image.height());
     }
 
     let mut level = Level::default();
@@ -48,31 +54,27 @@ fn load_level(f_bytes: &[u8], t_bytes: &[u8]) -> Level {
 }
 
 fn color_to_floor(color: Color) -> FloorTile {
-    if color == PLAYER_EXIT_COLOR {
-        FloorTile::PlayerExit
-    } else if color == BOX_EXIT_COLOR {
-        FloorTile::BoxExit
-    } else if color == EMPTY_TILE_COLOR {
-        FloorTile::None
-    } else {
-        error!("Invalid floor level color detected: {:?}", color);
-        FloorTile::None
+    match color {
+        PLAYER_EXIT_COLOR => FloorTile::PlayerExit,
+        BOX_EXIT_COLOR => FloorTile::BoxExit,
+        EMPTY_TILE_COLOR => FloorTile::None,
+        _ => {
+            error!("Invalid floor level color detected: {:?}", color);
+            FloorTile::None
+        }
     }
 }
 
 fn color_to_tile(color: Color) -> AboveTile {
-    if color == BOX_COLOR {
-        AboveTile::Box
-    } else if color == PULL_BOX_COLOR {
-        AboveTile::PullBox
-    } else if color == WALL_COLOR {
-        AboveTile::Wall
-    } else if color == PLAYER_COLOR {
-        AboveTile::Player
-    } else if color == EMPTY_TILE_COLOR {
-        AboveTile::None
-    } else {
-        error!("Invalid tile level color detected: {:?}", color);
-        AboveTile::None
+    match color {
+        BOX_COLOR => AboveTile::Box,
+        PULL_BOX_COLOR => AboveTile::PullBox,
+        WALL_COLOR => AboveTile::Wall,
+        PLAYER_COLOR => AboveTile::Player,
+        EMPTY_TILE_COLOR => AboveTile::None,
+        _ => {
+            error!("Invalid tile level color detected: {:?}", color);
+            AboveTile::None
+        }
     }
 }

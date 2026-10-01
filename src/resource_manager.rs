@@ -24,9 +24,7 @@ const PULL_BOX_IMG: &[u8] = include_bytes!("../resources/images/pull_box.png");
 const LEVEL_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/level_button.png");
 const LEVEL_BUTTON_SELECTED_IMG: &[u8] =
     include_bytes!("../resources/images/level_button_selected.png");
-const BACK_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/back_button.png");
-const BACK_BUTTON_SELECTED_IMG: &[u8] =
-    include_bytes!("../resources/images/back_button_selected.png");
+const BACK_ARROW_IMG: &[u8] = include_bytes!("../resources/images/back_arrow.png");
 const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png");
 const CHECKMARK_IMG: &[u8] = include_bytes!("../resources/images/checkmark.png");
 
@@ -58,8 +56,7 @@ pub struct ResourceManager {
     pub shader: Shader,
     pub level_button: Texture2D,
     pub level_button_selected: Texture2D,
-    pub back_button: Texture2D,
-    pub back_button_selected: Texture2D,
+    pub back_arrow: Texture2D,
     pub background: Texture2D,
     pub checkmark: Texture2D,
     sounds: HashMap<SoundId, Sound>,
@@ -91,8 +88,7 @@ impl ResourceManager {
             pull_box_tile: Self::load(PULL_BOX_IMG),
             background: Self::load(BACKGROUND_IMG),
             sounds: Self::load_sounds().await,
-            back_button: Self::load(BACK_BUTTON_IMG),
-            back_button_selected: Self::load(BACK_BUTTON_SELECTED_IMG),
+            back_arrow: Self::load(BACK_ARROW_IMG),
             checkmark: Self::load(CHECKMARK_IMG),
         }
     }

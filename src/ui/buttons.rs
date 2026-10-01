@@ -4,7 +4,7 @@ use macroquad::{
     math::{Rect, Vec2, vec2},
     miniquad::window::screen_size,
     text::{TextParams, draw_text_ex, measure_text},
-    texture::{DrawTextureParams, draw_texture_ex},
+    texture::{DrawTextureParams, Texture2D, draw_texture_ex},
 };
 
 use crate::{
@@ -68,6 +68,10 @@ pub fn draw_square_button(text: &str, x: f32, y: f32, context: &DrawLevelButtonC
 }
 
 pub fn draw_back_button(resource_manager: &ResourceManager) -> bool {
+    draw_image_button(&resource_manager.back_arrow, resource_manager)
+}
+
+fn draw_image_button(image: &Texture2D, resource_manager: &ResourceManager) -> bool {
     let (width, height) = screen_size();
     let (mouse_x, mouse_y) = mouse_position();
     let mouse_pos = vec2(mouse_x, mouse_y);
@@ -78,12 +82,22 @@ pub fn draw_back_button(resource_manager: &ResourceManager) -> bool {
     let button_rect = Rect::new(xy, xy, button_size, button_size);
     let is_hovered = button_rect.contains(mouse_pos);
     let texture = if is_hovered {
-        &resource_manager.back_button_selected
+        &resource_manager.level_button_selected
     } else {
-        &resource_manager.back_button
+        &resource_manager.level_button
     };
     draw_texture_ex(
         texture,
+        xy,
+        xy,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::splat(button_size)),
+            ..Default::default()
+        },
+    );
+    draw_texture_ex(
+        image,
         xy,
         xy,
         WHITE,

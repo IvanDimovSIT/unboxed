@@ -104,33 +104,35 @@ fn create_movement_deltas(
     assert!(!current_deltas.is_empty());
     let mut final_deltas = vec![];
 
-    for d in current_deltas {
-        if is_position_outside_level(d.to) {
+    for current_delta in current_deltas {
+        if is_position_outside_level(current_delta.to) {
             continue;
         }
 
-        let tile = level.get_above(d.to.x, d.to.y);
+        let tile = level.get_above(current_delta.to.x, current_delta.to.y);
         match tile {
             AboveTile::None => {
-                final_deltas.push(*d);
+                final_deltas.push(*current_delta);
             }
             AboveTile::Player | AboveTile::Box => {
                 let new_d = MovementDelta {
                     tile,
-                    from: d.to,
-                    to: calculate_push_delta(d.from, d.to),
+                    from: current_delta.to,
+                    to: calculate_push_delta(current_delta.from, current_delta.to),
                 };
                 let mut resolved = create_movement_deltas(initial_deltas, &[new_d], level);
                 if !resolved.is_empty() {
-                    final_deltas.push(*d);
+                    final_deltas.push(*current_delta);
                     final_deltas.append(&mut resolved);
                 }
             }
             AboveTile::PullBox => {
-                let box_delta_option = initial_deltas.iter().find(|delta| delta.from == d.to);
+                let box_delta_option = initial_deltas
+                    .iter()
+                    .find(|delta| delta.from == current_delta.to);
                 if let Some(box_delta) = box_delta_option {
                     let box_dir = box_delta.to - box_delta.from;
-                    let movement_dir = d.to - d.from;
+                    let movement_dir = current_delta.to - current_delta.from;
                     if box_dir != movement_dir {
                         continue;
                     }
@@ -140,12 +142,12 @@ fn create_movement_deltas(
 
                 let new_d = MovementDelta {
                     tile,
-                    from: d.to,
-                    to: calculate_push_delta(d.from, d.to),
+                    from: current_delta.to,
+                    to: calculate_push_delta(current_delta.from, current_delta.to),
                 };
                 let mut resolved = create_movement_deltas(initial_deltas, &[new_d], level);
                 if !resolved.is_empty() {
-                    final_deltas.push(*d);
+                    final_deltas.push(*current_delta);
                     final_deltas.append(&mut resolved);
                 }
             }
