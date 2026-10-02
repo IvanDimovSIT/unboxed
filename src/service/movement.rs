@@ -17,7 +17,7 @@ pub struct MovementDelta {
 
 pub fn process(level: &mut Level, movement_input: MovementInput) -> Vec<MovementDelta> {
     let direction = get_direction_for_movement(movement_input);
-    let initial_deltas = create_initial_deltas(&level, direction);
+    let initial_deltas = create_initial_deltas(level, direction);
 
     if initial_deltas.is_empty() {
         return vec![];
@@ -45,7 +45,7 @@ pub fn undo_deltas(
         warn!("Received empty deltas to undo");
     }
     reverse_deltas(&mut deltas_to_undo);
-    apply_deltas(level, &mut deltas_to_undo);
+    apply_deltas(level, &deltas_to_undo);
 
     deltas_to_undo
 }

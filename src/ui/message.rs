@@ -12,6 +12,26 @@ use crate::resource_manager::ResourceManager;
 const TEXT_COLOR: Color = Color::from_rgba(255, 255, 255, 255);
 const TEXT_SHADOW_COLOR: Color = Color::from_rgba(255, 255, 255, 70);
 
+pub fn draw_level_number(
+    level_number: usize,
+    window_height: f32,
+    resource_manager: &ResourceManager,
+) {
+    const FONT_SIZE_COEF: f32 = 0.05;
+    const MARGIN_COEF: f32 = 0.02;
+    let text = format!("Level {}", level_number);
+    let font_size = (FONT_SIZE_COEF * window_height) as u16;
+    let margin = MARGIN_COEF * window_height;
+
+    draw_text_with_shadow(
+        &text,
+        margin,
+        window_height - margin,
+        font_size,
+        resource_manager,
+    );
+}
+
 pub fn display_message(messages: &[&str], resource_manager: &ResourceManager) {
     const SIZE_COEF: f32 = 0.05;
     const MARGIN_COEF: f32 = 0.4;

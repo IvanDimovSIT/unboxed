@@ -37,17 +37,20 @@ pub fn draw_level(context: &LevelDrawContext) -> Vec<Light> {
                 if above_tile != AboveTile::Wall {
                     let floor_tile = level_to_draw.get_below(x as i32, y as i32);
                     tile_renderer.prepare_floor(floor_tile, pos);
-                    Light::from_floor(floor_tile, pos + tile_center_offset)
-                        .map(|light| lights.push(light));
+                    if let Some(light) = Light::from_floor(floor_tile, pos + tile_center_offset) {
+                        lights.push(light)
+                    }
                 }
                 tile_renderer.prepare_tile(above_tile, pos);
-                Light::from_tile(above_tile, pos + tile_center_offset)
-                    .map(|light| lights.push(light));
+                if let Some(light) = Light::from_tile(above_tile, pos + tile_center_offset) {
+                    lights.push(light)
+                }
             } else {
                 let floor_tile = level_to_draw.get_below(x as i32, y as i32);
                 tile_renderer.prepare_floor(floor_tile, pos);
-                Light::from_floor(floor_tile, pos + tile_center_offset)
-                    .map(|light| lights.push(light));
+                if let Some(light) = Light::from_floor(floor_tile, pos + tile_center_offset) {
+                    lights.push(light)
+                }
             }
         }
     }
@@ -88,7 +91,9 @@ fn draw_animated_tiles(
         let pos = (from * r_coef + (to * coef)) * tile_size + context.top_left;
 
         tile_renderer.prepare_tile(d.tile, pos);
-        Light::from_tile(d.tile, pos + tile_center_offset).map(|light| lights.push(light));
+        if let Some(light) = Light::from_tile(d.tile, pos + tile_center_offset) {
+            lights.push(light)
+        }
     }
 }
 

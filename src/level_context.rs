@@ -16,7 +16,10 @@ use crate::{
         self,
         movement::{self, MovementDelta},
     },
-    ui::{buttons::draw_back_button, message::display_message},
+    ui::{
+        buttons::draw_back_button,
+        message::{display_message, draw_level_number},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -93,8 +96,10 @@ impl LevelContext {
             self.animation_time_s = 0.0;
         }
 
-        self.draw_level(resource_manager);
+        let (width, height) = screen_size();
+        self.draw_level(width, height, resource_manager);
 
+        draw_level_number(self.current_level_index + 1, height, resource_manager);
         self.show_messages(resource_manager);
 
         if draw_back_button(resource_manager) {
@@ -186,10 +191,9 @@ impl LevelContext {
         }
     }
 
-    fn draw_level(&self, resource_manager: &ResourceManager) {
+    fn draw_level(&self, width: f32, height: f32, resource_manager: &ResourceManager) {
         let animation_progress = self.animation_time_s / Self::ANIMATION_TIME;
         let window_pos = find_level_window_position();
-        let (width, height) = screen_size();
         resource_manager.shader.use_shader(width, height, || {
             draw_background(resource_manager);
             let level_draw_context = LevelDrawContext {

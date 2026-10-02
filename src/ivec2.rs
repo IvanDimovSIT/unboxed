@@ -32,9 +32,9 @@ impl Sub for Ivec2 {
         }
     }
 }
-impl Into<Vec2> for Ivec2 {
-    fn into(self) -> Vec2 {
-        vec2(self.x as f32, self.y as f32)
+impl From<Ivec2> for Vec2 {
+    fn from(val: Ivec2) -> Self {
+        vec2(val.x as f32, val.y as f32)
     }
 }
 impl AddAssign<Ivec2> for Ivec2 {
