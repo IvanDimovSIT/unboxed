@@ -1,4 +1,7 @@
-use macroquad::input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed};
+use macroquad::{
+    input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed, mouse_position},
+    math::{Vec2, vec2},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MovementInput {
@@ -99,4 +102,9 @@ pub fn next_level() -> bool {
     is_key_pressed(KeyCode::Space)
         || is_key_pressed(KeyCode::Enter)
         || is_key_pressed(KeyCode::KpEnter)
+}
+
+pub fn get_mouse_vec() -> Vec2 {
+    let (x, y) = mouse_position();
+    vec2(x, y)
 }

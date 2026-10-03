@@ -1,29 +1,21 @@
 use crate::{
     game_context::Event,
     graphics::background::draw_background,
+    input::get_mouse_vec,
     resource_manager::ResourceManager,
     ui::{
-        buttons::{DrawLevelButtonContext, draw_help_button, draw_square_button},
+        buttons::{create_help_button, create_level_button},
         message::draw_centered_text,
     },
 };
-use macroquad::{
-    color::WHITE,
-    input::mouse_position,
-    math::{Vec2, vec2},
-    miniquad::window::screen_size,
-    prelude::error,
-    texture::{DrawTextureParams, draw_texture_ex},
-};
-use std::{collections::HashSet, fmt::Write};
+use macroquad::miniquad::window::screen_size;
+use std::collections::HashSet;
 
 const TITLE_Y_COEF: f32 = 0.04;
 const TITLE_SIZE_COEF: f32 = 0.08;
 const BUTTONS_PER_ROW: usize = 8;
 const BUTTONS_SIZE_COEF: f32 = 0.05;
 const MARGIN_COEF: f32 = 0.01;
-const CHECKMARK_SIZE_OF_BUTTON: f32 = 0.45;
-const CHECKMARK_OFFSET_COEF: f32 = 0.2;
 
 pub fn draw_level_select(
     levels_count: usize,
@@ -31,55 +23,44 @@ pub fn draw_level_select(
     resource_manager: &ResourceManager,
 ) -> Event {
     let (width, height) = screen_size();
-    resource_manager.shader.use_shader(width, height, || {
-        draw_background(resource_manager);
-        vec![]
-    });
+    let mut help_btn = create_help_button(width, height);
     let button_size = BUTTONS_SIZE_COEF * width;
     let margin = MARGIN_COEF * width;
-    draw_centered_text("Unboxed", TITLE_Y_COEF, TITLE_SIZE_COEF, resource_manager);
-    let (mouse_x, mouse_y) = mouse_position();
     let grid_width = (button_size + margin) * BUTTONS_PER_ROW as f32;
     let start_x = (width - grid_width) / 2.0;
     let start_y = height * 0.23;
-
-    let button_ctx = DrawLevelButtonContext {
-        size: button_size,
-        resource_manager,
-        mouse_pos: vec2(mouse_x, mouse_y),
-    };
-    let checkmark_size = button_size * CHECKMARK_SIZE_OF_BUTTON;
-    let checkmark_offset = checkmark_size * CHECKMARK_OFFSET_COEF;
-
-    let mut selected_level = None;
-    let mut text_buffer = String::with_capacity(3);
+    let mut level_buttons = Vec::with_capacity(levels_count);
     for i in 0..levels_count {
         let row = i / BUTTONS_PER_ROW;
         let x = start_x + (i % BUTTONS_PER_ROW) as f32 * (button_size + margin);
         let y = start_y + (button_size + margin) * row as f32;
-        text_buffer.clear();
-        let write_result = write!(&mut text_buffer, "{}", i + 1);
-        if let Err(err) = write_result {
-            error!("Error writing level number {}", err);
-        }
-        if draw_square_button(&text_buffer, x, y, &button_ctx) {
-            selected_level = Some(i);
-        }
-        if completed_levels.contains(&i) {
-            draw_texture_ex(
-                &resource_manager.checkmark,
-                x + button_size - checkmark_size + checkmark_offset,
-                y - checkmark_offset,
-                WHITE,
-                DrawTextureParams {
-                    dest_size: Some(Vec2::splat(checkmark_size)),
-                    ..Default::default()
-                },
-            );
-        }
+        let draw_checkmark = completed_levels.contains(&i);
+        level_buttons.push(create_level_button(
+            i + 1,
+            x,
+            y,
+            button_size,
+            draw_checkmark,
+        ));
     }
 
-    let is_go_to_help = draw_help_button(resource_manager);
+    resource_manager.shader.use_shader(width, height, || {
+        let mouse_vec = get_mouse_vec();
+        draw_background(resource_manager);
+        draw_centered_text("Unboxed", TITLE_Y_COEF, TITLE_SIZE_COEF, resource_manager);
+        help_btn.draw(mouse_vec, resource_manager);
+        for level_button in &mut level_buttons {
+            level_button.draw(mouse_vec, resource_manager);
+        }
+        vec![]
+    });
+
+    let is_go_to_help = help_btn.is_clicked;
+    let selected_level = level_buttons
+        .into_iter()
+        .enumerate()
+        .find(|(_level_index, level_btn)| level_btn.is_clicked)
+        .map(|(level_index, _level_btn)| level_index);
 
     if let Some(level) = selected_level {
         Event::ChangeLevel(level)

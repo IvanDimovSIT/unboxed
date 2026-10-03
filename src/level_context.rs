@@ -9,7 +9,7 @@ use crate::{
         draw::{LevelDrawContext, draw_level},
         level_window::find_level_window_position,
     },
-    input::{self, MovementInput},
+    input::{self, MovementInput, get_mouse_vec},
     level::{AboveTile, Level},
     resource_manager::{ResourceManager, SoundId},
     service::{
@@ -17,7 +17,7 @@ use crate::{
         movement::{self, MovementDelta},
     },
     ui::{
-        buttons::draw_back_button,
+        buttons::create_back_button,
         message::{display_message, draw_level_number},
     },
 };
@@ -97,12 +97,9 @@ impl LevelContext {
         }
 
         let (width, height) = screen_size();
-        self.draw_level(width, height, resource_manager);
+        let should_go_back = self.draw_level(width, height, resource_manager);
 
-        draw_level_number(self.current_level_index + 1, height, resource_manager);
-        self.show_messages(resource_manager);
-
-        if draw_back_button(resource_manager) {
+        if should_go_back {
             return Event::ToLevelSelect;
         }
 
@@ -191,9 +188,11 @@ impl LevelContext {
         }
     }
 
-    fn draw_level(&self, width: f32, height: f32, resource_manager: &ResourceManager) {
+    /// returns true if back button is pressed
+    fn draw_level(&self, width: f32, height: f32, resource_manager: &ResourceManager) -> bool {
         let animation_progress = self.animation_time_s / Self::ANIMATION_TIME;
         let window_pos = find_level_window_position();
+        let mut back_button = create_back_button(width, height);
         resource_manager.shader.use_shader(width, height, || {
             draw_background(resource_manager);
             let level_draw_context = LevelDrawContext {
@@ -204,9 +203,15 @@ impl LevelContext {
                 deltas: &self.animation_deltas,
                 resource_manager,
             };
+            let lights = draw_level(&level_draw_context);
+            draw_level_number(self.current_level_index + 1, height, resource_manager);
+            self.show_messages(resource_manager);
+            back_button.draw(get_mouse_vec(), resource_manager);
 
-            draw_level(&level_draw_context)
+            if self.is_win { vec![] } else { lights }
         });
+
+        back_button.is_clicked
     }
 
     fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
