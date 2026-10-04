@@ -36,7 +36,9 @@ pub fn display_message(messages: &[&str], resource_manager: &ResourceManager) {
     const SIZE_COEF: f32 = 0.05;
     const MARGIN_COEF: f32 = 0.4;
     const EXTRA_LINE_SPACE_COEF: f32 = 1.2;
+    const BACKGROUND_DIM_COLOR: Color = Color::from_rgba(0, 0, 0, 90);
     let (screen_width, screen_height) = screen_size();
+    draw_rectangle(0.0, 0.0, screen_width, screen_height, BACKGROUND_DIM_COLOR);
     if messages.is_empty() {
         return;
     }

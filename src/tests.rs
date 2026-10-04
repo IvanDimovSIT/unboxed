@@ -135,6 +135,12 @@ fn test_level12() {
 
 #[test]
 fn test_level13() {
-    let inputs = "rddllrrrlldlddddrruldluulludrrurrurlurlldlulrruurruurrdudlluuuulddddrurdldddddrddlllurlldrrrruruulddrdllulrdllulrd";
+    let inputs = "ddduuurrdddlldruruuuurrruldddddddlluuldrdrruuuuuulldlluurddlddddrrdrruuuuururrdddllldddlluluuluuurdrurlluldddddrrddrruuuuururrdddllldddlluuuuu";
     test_level_solution(13, inputs);
+}
+
+#[test]
+fn test_level14() {
+    let inputs = "rddllrrrlldlddddrruldluulludrrurrurlurlldlulrruurruurrdudlluuuulddddrurdldddddrddlllurlldrrrruruulddrdllulrdllulrd";
+    test_level_solution(14, inputs);
 }

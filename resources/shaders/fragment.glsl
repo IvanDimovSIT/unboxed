@@ -16,15 +16,64 @@ uniform vec4 lightColors[MAX_LIGHTS];
 
 const float distortionAmount = 0.025;
 
-const float maxLightBoost = 1.20;
 const float haloRadiusMultiplier = 1.49;
-const float haloStrength = 0.18;
+const float haloStrength = 0.12;
+
+const float bloomStrength = 0.5;
+const float bloomThreshold = 0.5;
+const float bloomRadius = 4.0;
 
 vec2 crtDistort(vec2 uv, float distortion) {
     vec2 center = uv - vec2(0.5);
     float dist = dot(center, center);
 
     return uv + center * dist * distortion;
+}
+
+vec3 sampleBloom(vec2 uv) {
+    vec2 texel = vec2(1.0 / screenWidth, 1.0 / screenHeight);
+
+    vec3 bloom = vec3(0.0);
+
+    vec3 c = texture2D(Texture, uv).rgb;
+    float brightness = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    float centerFactor = max(brightness - bloomThreshold, 0.0);
+
+    bloom += c * centerFactor * 0.25;
+
+    for (int i = 1; i <= 3; i++) {
+        float offset = float(i) * bloomRadius;
+
+        vec3 left = texture2D(Texture, uv - vec2(texel.x * offset, 0.0)).rgb;
+        vec3 right = texture2D(Texture, uv + vec2(texel.x * offset, 0.0)).rgb;
+
+        float leftBrightness = dot(left, vec3(0.2126, 0.7152, 0.0722));
+        float rightBrightness = dot(right, vec3(0.2126, 0.7152, 0.0722));
+
+        float leftFactor = max(leftBrightness - bloomThreshold, 0.0);
+        float rightFactor = max(rightBrightness - bloomThreshold, 0.0);
+
+        bloom += left * leftFactor * (0.12 / float(i));
+        bloom += right * rightFactor * (0.12 / float(i));
+    }
+
+    for (int i = 1; i <= 3; i++) {
+        float offset = float(i) * bloomRadius;
+
+        vec3 up = texture2D(Texture, uv - vec2(0.0, texel.y * offset)).rgb;
+        vec3 down = texture2D(Texture, uv + vec2(0.0, texel.y * offset)).rgb;
+
+        float upBrightness = dot(up, vec3(0.2126, 0.7152, 0.0722));
+        float downBrightness = dot(down, vec3(0.2126, 0.7152, 0.0722));
+
+        float upFactor = max(upBrightness - bloomThreshold, 0.0);
+        float downFactor = max(downBrightness - bloomThreshold, 0.0);
+
+        bloom += up * upFactor * (0.12 / float(i));
+        bloom += down * downFactor * (0.12 / float(i));
+    }
+
+    return bloom * bloomStrength;
 }
 
 void main() {
@@ -78,9 +127,8 @@ void main() {
     vec3 haloRGB = totalHalo * (vec3(1.0) - baseColor.rgb);
     litRGB += haloRGB;
 
-    vec3 maximumRGB = baseColor.rgb * maxLightBoost;
-
-    litRGB = min(litRGB, maximumRGB);
+    // Keep brightness above 1.0 available for bloom.
+    litRGB = min(litRGB, vec3(2.0));
 
     float scanlineWave = sin(crtUV.y * 600.0);
     float scanline = 0.5 + 0.5 * scanlineWave;
@@ -98,6 +146,8 @@ void main() {
     vignette = clamp(vignette, 0.0, 1.0);
 
     vec3 finalRGB = litRGB;
+
+    finalRGB += sampleBloom(crtUV);
 
     finalRGB *= scanlineBrightness;
     finalRGB *= vignette;

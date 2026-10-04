@@ -204,11 +204,11 @@ impl LevelContext {
                 resource_manager,
             };
             let lights = draw_level(&level_draw_context);
-            draw_level_number(self.current_level_index + 1, height, resource_manager);
             self.show_messages(resource_manager);
+            draw_level_number(self.current_level_index + 1, height, resource_manager);
             back_button.draw(get_mouse_vec(), resource_manager);
 
-            if self.is_win { vec![] } else { lights }
+            lights
         });
 
         back_button.is_clicked
