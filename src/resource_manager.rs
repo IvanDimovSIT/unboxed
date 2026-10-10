@@ -25,6 +25,8 @@ const LEVEL_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/level_button
 const LEVEL_BUTTON_SELECTED_IMG: &[u8] =
     include_bytes!("../resources/images/level_button_selected.png");
 const BACK_ARROW_IMG: &[u8] = include_bytes!("../resources/images/back_arrow.png");
+const RESET_X_IMG: &[u8] = include_bytes!("../resources/images/reset_x.png");
+const UNDO_ARROW_IMG: &[u8] = include_bytes!("../resources/images/undo_arrow.png");
 const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png");
 const CHECKMARK_IMG: &[u8] = include_bytes!("../resources/images/checkmark.png");
 
@@ -57,6 +59,8 @@ pub struct ResourceManager {
     pub level_button: Texture2D,
     pub level_button_selected: Texture2D,
     pub back_arrow: Texture2D,
+    pub undo_arrow: Texture2D,
+    pub reset_x: Texture2D,
     pub background: Texture2D,
     pub checkmark: Texture2D,
     sounds: HashMap<SoundId, Sound>,
@@ -90,6 +94,8 @@ impl ResourceManager {
             sounds: Self::load_sounds().await,
             back_arrow: Self::load(BACK_ARROW_IMG),
             checkmark: Self::load(CHECKMARK_IMG),
+            reset_x: Self::load(RESET_X_IMG),
+            undo_arrow: Self::load(UNDO_ARROW_IMG),
         }
     }
 

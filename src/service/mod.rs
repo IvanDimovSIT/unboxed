@@ -1,3 +1,4 @@
+pub mod browser;
 pub mod level_loader;
 pub mod movement;
 pub mod persistence;

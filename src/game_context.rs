@@ -1,10 +1,7 @@
-use std::collections::HashSet;
-
 use crate::{
-    level::Level,
     level_context::LevelContext,
-    resource_manager::ResourceManager,
     service::persistence::save_completed_levels,
+    shared_state::SharedState,
     ui::{draw_help::draw_help, draw_level_select::draw_level_select},
 };
 
@@ -25,46 +22,32 @@ pub enum Event {
 }
 
 #[derive(Debug)]
-pub struct GameContext<'a> {
-    resource_manager: &'a ResourceManager,
-    level_templates: &'a [Level],
-    completed_levels: HashSet<usize>,
+pub struct GameContext {
+    shared_state: SharedState,
     mode: Mode,
 }
-impl<'a> GameContext<'a> {
-    pub fn new(
-        resource_manager: &'a ResourceManager,
-        levels: &'a [Level],
-        completed_levels: HashSet<usize>,
-    ) -> Self {
+impl GameContext {
+    pub fn new(shared_state: SharedState) -> Self {
         Self {
-            resource_manager,
-            level_templates: levels,
+            shared_state,
             mode: Mode::LevelSelect,
-            completed_levels,
         }
     }
 
     pub fn process_frame(&mut self, delta: f32) {
         let event = match &mut self.mode {
-            Mode::InLevel(ctx) => {
-                ctx.process_level(self.level_templates.len(), self.resource_manager, delta)
-            }
-            Mode::LevelSelect => draw_level_select(
-                self.level_templates.len(),
-                &self.completed_levels,
-                self.resource_manager,
-            ),
-            Mode::Help => draw_help(self.resource_manager),
+            Mode::InLevel(ctx) => ctx.process_level(&self.shared_state, delta),
+            Mode::LevelSelect => draw_level_select(&self.shared_state),
+            Mode::Help => draw_help(&self.shared_state),
         };
 
         match event {
             Event::None => {}
             Event::ChangeLevel(new_level) => {
-                let show_controls = self.completed_levels.is_empty();
-                if new_level < self.level_templates.len() {
+                let show_controls = self.shared_state.completed_levels.is_empty();
+                if new_level < self.shared_state.level_templates.len() {
                     self.mode = Mode::InLevel(LevelContext::new(
-                        self.level_templates[new_level].clone(),
+                        self.shared_state.level_templates[new_level].clone(),
                         new_level,
                         show_controls,
                     ))
@@ -73,8 +56,8 @@ impl<'a> GameContext<'a> {
             Event::ToLevelSelect => self.mode = Mode::LevelSelect,
             Event::ToHelp => self.mode = Mode::Help,
             Event::WinLevel(won_level) => {
-                self.completed_levels.insert(won_level);
-                save_completed_levels(&self.completed_levels)
+                self.shared_state.completed_levels.insert(won_level);
+                save_completed_levels(&self.shared_state.completed_levels)
             }
         }
     }

@@ -48,7 +48,7 @@ impl MovementInput {
     }
 }
 
-pub fn get_movement_input() -> Option<MovementInput> {
+pub fn get_movement_input_desktop() -> Option<MovementInput> {
     if left() {
         Some(MovementInput::Left)
     } else if right() {
@@ -63,6 +63,42 @@ pub fn get_movement_input() -> Option<MovementInput> {
         Some(MovementInput::Reset)
     } else {
         None
+    }
+}
+
+pub fn get_movement_input_mobile(
+    mouse_vec: Vec2,
+    width: f32,
+    height: f32,
+) -> Option<MovementInput> {
+    if is_mouse_button_pressed(MouseButton::Left) {
+        Some(get_movement_for_screen_region(width, height, mouse_vec))
+    } else {
+        None
+    }
+}
+
+fn get_movement_for_screen_region(
+    screen_width: f32,
+    screen_height: f32,
+    mouse_vec: Vec2,
+) -> MovementInput {
+    let screen = vec2(screen_width, screen_height);
+    let d = mouse_vec - screen / 2.0;
+    let n = d / screen;
+
+    if n.x.abs() > n.y.abs() {
+        if d.x < 0.0 {
+            MovementInput::Left
+        } else {
+            MovementInput::Right
+        }
+    } else {
+        if d.y < 0.0 {
+            MovementInput::Up
+        } else {
+            MovementInput::Down
+        }
     }
 }
 
@@ -98,10 +134,14 @@ pub fn click() -> bool {
     is_mouse_button_pressed(MouseButton::Left)
 }
 
-pub fn next_level() -> bool {
-    is_key_pressed(KeyCode::Space)
-        || is_key_pressed(KeyCode::Enter)
-        || is_key_pressed(KeyCode::KpEnter)
+pub fn next_level(is_mobile: bool) -> bool {
+    if is_mobile {
+        is_mouse_button_pressed(MouseButton::Left)
+    } else {
+        is_key_pressed(KeyCode::Space)
+            || is_key_pressed(KeyCode::Enter)
+            || is_key_pressed(KeyCode::KpEnter)
+    }
 }
 
 pub fn get_mouse_vec() -> Vec2 {
