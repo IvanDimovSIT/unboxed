@@ -23,6 +23,8 @@ const float bloomStrength = 0.5;
 const float bloomThreshold = 0.5;
 const float bloomRadius = 4.0;
 
+const float maxBrightnessIncrease = 0.25;
+
 vec2 crtDistort(vec2 uv, float distortion) {
     vec2 center = uv - vec2(0.5);
     float dist = dot(center, center);
@@ -122,12 +124,15 @@ void main() {
         totalHalo += lightColor * halo * haloStrength;
     }
 
-    vec3 litRGB = baseColor.rgb * totalLighting;
+    vec3 originalRGB = baseColor.rgb;
 
-    vec3 haloRGB = totalHalo * (vec3(1.0) - baseColor.rgb);
+    vec3 litRGB = originalRGB * totalLighting;
+
+    vec3 haloRGB = totalHalo * (vec3(1.0) - originalRGB);
     litRGB += haloRGB;
 
-    // Keep brightness above 1.0 available for bloom.
+    litRGB = min(litRGB, originalRGB + vec3(maxBrightnessIncrease));
+
     litRGB = min(litRGB, vec3(2.0));
 
     float scanlineWave = sin(crtUV.y * 600.0);

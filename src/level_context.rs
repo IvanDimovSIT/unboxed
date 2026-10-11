@@ -12,7 +12,7 @@ use crate::{
         draw::{LevelDrawContext, draw_level},
         level_window::find_level_window_position,
     },
-    input::{self, MovementInput, get_mouse_vec},
+    input::{self, MobileInputReader, MovementInput, get_mouse_vec},
     level::{AboveTile, Level},
     resource_manager::{ResourceManager, SoundId},
     service::{
@@ -39,6 +39,7 @@ pub struct LevelContext {
     current_level_index: usize,
     is_win: bool,
     show_controls: bool,
+    mobile_input_reader: MobileInputReader,
 }
 impl LevelContext {
     const PREVIOUS_DELTAS_CAPACITY: usize = 64;
@@ -57,6 +58,7 @@ impl LevelContext {
             #[cfg(debug_assertions)]
             inputs: vec![],
             show_controls,
+            mobile_input_reader: MobileInputReader::new(),
         }
     }
 
@@ -68,6 +70,7 @@ impl LevelContext {
         self.cached_move = None;
         #[cfg(debug_assertions)]
         self.inputs.clear();
+        self.mobile_input_reader.reset();
     }
 
     pub fn process_level(&mut self, shared_state: &SharedState, delta: f32) -> Event {
@@ -95,7 +98,7 @@ impl LevelContext {
         } else if reset_button.is_clicked {
             Some(MovementInput::Reset)
         } else {
-            self.get_movement(mouse_vec, width, height, shared_state)
+            self.get_movement(mouse_vec, shared_state)
         };
         if let Some(movement) = movement_input {
             self.show_controls = false;
@@ -151,7 +154,7 @@ impl LevelContext {
         const LEVEL_COMPLETE_MESSAGES_MOBILE: [&str; 2] = ["Level complete!", "Tap to continue..."];
         const CONTROLS_MESSAGES_DESKTOP: [&str; 3] = ["W/S/A/D - Move", "Z - Undo", "R - Reset"];
         const CONTROLS_MESSAGES_MOBILE: [&str; 3] = [
-            "Tap the sides of the screen to move",
+            "Swipe the screen to move",
             "Undo the last move with",
             "the button on the top right",
         ];
@@ -184,6 +187,7 @@ impl LevelContext {
             self.cached_move = None;
             #[cfg(debug_assertions)]
             self.inputs.pop();
+            self.mobile_input_reader.reset();
         }
     }
 
@@ -206,8 +210,6 @@ impl LevelContext {
     fn get_movement(
         &mut self,
         mouse_vec: Vec2,
-        width: f32,
-        height: f32,
         shared_state: &SharedState,
     ) -> Option<MovementInput> {
         if self.is_win {
@@ -216,7 +218,8 @@ impl LevelContext {
         }
 
         let movement_input = if shared_state.is_mobile {
-            input::get_movement_input_mobile(mouse_vec, width, height)
+            self.mobile_input_reader
+                .get_movement_input_mobile(mouse_vec)
         } else {
             input::get_movement_input_desktop()
         };
