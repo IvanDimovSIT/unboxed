@@ -19,7 +19,7 @@ pub fn draw_help(shared_state: &SharedState) -> Event {
     let resource_manager = &shared_state.resource_manager;
     resource_manager.shader.use_shader(width, height, || {
         draw_background(&shared_state.resource_manager);
-        back_button.detect(get_mouse_vec(), resource_manager);
+        back_button.detect(get_mouse_vec(), shared_state);
         back_button.draw(resource_manager);
         draw_centered_text("Controls", 0.04, 0.08, resource_manager);
         let x = width * 0.1;

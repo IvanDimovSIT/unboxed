@@ -14,7 +14,7 @@ use crate::{
     },
     input::{self, MobileInputReader, MovementInput, get_mouse_vec},
     level::{AboveTile, Level},
-    resource_manager::{ResourceManager, SoundId},
+    resource_manager::SoundId,
     service::{
         self,
         movement::{self, MovementDelta},
@@ -83,10 +83,10 @@ impl LevelContext {
         let mut back_button = Button::new_back(width, height);
         let mut undo_button = Button::new_undo(width, height);
         let mut reset_button = Button::new_reset(width, height);
-        back_button.detect(mouse_vec, &shared_state.resource_manager);
+        back_button.detect(mouse_vec, shared_state);
         if shared_state.is_mobile {
-            undo_button.detect(mouse_vec, &shared_state.resource_manager);
-            reset_button.detect(mouse_vec, &shared_state.resource_manager);
+            undo_button.detect(mouse_vec, shared_state);
+            reset_button.detect(mouse_vec, shared_state);
         }
 
         if back_button.is_clicked {
@@ -107,7 +107,7 @@ impl LevelContext {
             } else if movement == MovementInput::Reset {
                 self.reset();
             } else {
-                self.handle_move(movement, &shared_state.resource_manager);
+                self.handle_move(movement, shared_state);
             }
         }
 
@@ -130,7 +130,7 @@ impl LevelContext {
 
         if !self.is_win && service::win_condition::is_win(&self.level) {
             self.is_win = true;
-            shared_state.resource_manager.play_sound(SoundId::Win);
+            shared_state.play_sound_if_enabled(SoundId::Win);
             #[cfg(debug_assertions)]
             info!(
                 "Winning moves: {}",
@@ -191,7 +191,7 @@ impl LevelContext {
         }
     }
 
-    fn handle_move(&mut self, movement: MovementInput, resource_manager: &ResourceManager) {
+    fn handle_move(&mut self, movement: MovementInput, shared_state: &SharedState) {
         assert!(matches!(
             movement,
             MovementInput::Left | MovementInput::Right | MovementInput::Up | MovementInput::Down
@@ -200,7 +200,7 @@ impl LevelContext {
         if !movement_deltas.is_empty() {
             #[cfg(debug_assertions)]
             self.inputs.push(movement);
-            Self::play_sounds_for_deltas(&movement_deltas, resource_manager);
+            Self::play_sounds_for_deltas(&movement_deltas, shared_state);
             self.animation_deltas = movement_deltas.clone();
             self.animation_time_s = 0.0;
             self.previous_deltas.push(movement_deltas);
@@ -275,16 +275,16 @@ impl LevelContext {
         });
     }
 
-    fn play_sounds_for_deltas(deltas: &[MovementDelta], resource_manager: &ResourceManager) {
+    fn play_sounds_for_deltas(deltas: &[MovementDelta], shared_state: &SharedState) {
         for d in deltas {
             if d.tile.is_box() {
-                resource_manager.play_sound(SoundId::PushBox);
+                shared_state.play_sound_if_enabled(SoundId::PushBox);
                 break;
             }
         }
         for d in deltas {
             if d.tile == AboveTile::Player {
-                resource_manager.play_sound(SoundId::Move);
+                shared_state.play_sound_if_enabled(SoundId::Move);
                 return;
             }
         }

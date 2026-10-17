@@ -19,6 +19,7 @@ pub enum Event {
     ToLevelSelect,
     WinLevel(usize),
     ToHelp,
+    SetSound(bool),
 }
 
 #[derive(Debug)]
@@ -59,6 +60,7 @@ impl GameContext {
                 self.shared_state.completed_levels.insert(won_level);
                 save_completed_levels(&self.shared_state.completed_levels)
             }
+            Event::SetSound(is_sound_on) => self.shared_state.is_sound_on = is_sound_on,
         }
     }
 }

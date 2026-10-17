@@ -33,6 +33,7 @@ async fn main() {
         level_templates,
         completed_levels,
         is_mobile,
+        is_sound_on: true,
     });
 
     loop {

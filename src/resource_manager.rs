@@ -29,6 +29,8 @@ const RESET_X_IMG: &[u8] = include_bytes!("../resources/images/reset_x.png");
 const UNDO_ARROW_IMG: &[u8] = include_bytes!("../resources/images/undo_arrow.png");
 const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png");
 const CHECKMARK_IMG: &[u8] = include_bytes!("../resources/images/checkmark.png");
+const SOUND_ON_IMG: &[u8] = include_bytes!("../resources/images/sound_on.png");
+const SOUND_OFF_IMG: &[u8] = include_bytes!("../resources/images/sound_off.png");
 
 const FONT_BYTES: &[u8] = include_bytes!("../resources/font.ttf");
 
@@ -63,6 +65,8 @@ pub struct ResourceManager {
     pub reset_x: Texture2D,
     pub background: Texture2D,
     pub checkmark: Texture2D,
+    pub sound_on: Texture2D,
+    pub sound_off: Texture2D,
     sounds: HashMap<SoundId, Sound>,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
@@ -96,6 +100,8 @@ impl ResourceManager {
             checkmark: Self::load(CHECKMARK_IMG),
             reset_x: Self::load(RESET_X_IMG),
             undo_arrow: Self::load(UNDO_ARROW_IMG),
+            sound_on: Self::load(SOUND_ON_IMG),
+            sound_off: Self::load(SOUND_OFF_IMG),
         }
     }
 

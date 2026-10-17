@@ -17,6 +17,7 @@ pub fn draw_level_select(shared_state: &SharedState) -> Event {
     let levels_count = shared_state.level_templates.len();
     let (width, height) = screen_size();
     let mut help_btn = Button::new_help(width, height);
+    let mut sound_btn = Button::new_sound(width, height, shared_state);
     let button_size = BUTTONS_SIZE_COEF * width;
     let margin = MARGIN_COEF * width;
     let grid_width = (button_size + margin) * BUTTONS_PER_ROW as f32;
@@ -36,14 +37,20 @@ pub fn draw_level_select(shared_state: &SharedState) -> Event {
         let mouse_vec = get_mouse_vec();
         draw_background(resource_manager);
         draw_centered_text("Unboxed", TITLE_Y_COEF, TITLE_SIZE_COEF, resource_manager);
-        help_btn.detect(mouse_vec, resource_manager);
+        help_btn.detect(mouse_vec, shared_state);
+        sound_btn.detect(mouse_vec, shared_state);
         help_btn.draw(resource_manager);
+        sound_btn.draw(resource_manager);
         for level_button in &mut level_buttons {
-            level_button.detect(mouse_vec, resource_manager);
+            level_button.detect(mouse_vec, shared_state);
             level_button.draw(resource_manager);
         }
         vec![]
     });
+
+    if sound_btn.is_clicked {
+        return Event::SetSound(!shared_state.is_sound_on);
+    }
 
     let is_go_to_help = help_btn.is_clicked;
     let selected_level = level_buttons
