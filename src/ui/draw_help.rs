@@ -26,7 +26,7 @@ pub fn draw_help(shared_state: &SharedState) -> Event {
         let y = height * 0.3;
         let font_size = (height * FONT_SIZE_COEF).round() as u16;
         let text = if shared_state.is_mobile {
-            "Swipe to move\nUndo with the top right button\nReset the level with the X button"
+            "Swipe or tap the sides of the screen to move\nUndo with the top right button\nReset the level with the X button"
         } else {
             "W/S/A/D - Move\nZ - Undo\nR - Reset\nESC - Back"
         };

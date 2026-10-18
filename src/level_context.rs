@@ -98,7 +98,7 @@ impl LevelContext {
         } else if reset_button.is_clicked {
             Some(MovementInput::Reset)
         } else {
-            self.get_movement(mouse_vec, shared_state)
+            self.get_movement_input(mouse_vec, width, height, shared_state)
         };
         if let Some(movement) = movement_input {
             self.show_controls = false;
@@ -153,8 +153,9 @@ impl LevelContext {
             ["Level complete!", "Press space to continue..."];
         const LEVEL_COMPLETE_MESSAGES_MOBILE: [&str; 2] = ["Level complete!", "Tap to continue..."];
         const CONTROLS_MESSAGES_DESKTOP: [&str; 3] = ["W/S/A/D - Move", "Z - Undo", "R - Reset"];
-        const CONTROLS_MESSAGES_MOBILE: [&str; 3] = [
-            "Swipe the screen to move",
+        const CONTROLS_MESSAGES_MOBILE: [&str; 4] = [
+            "Swipe or tap the sides ",
+            "of the screen to move",
             "Undo the last move with",
             "the button on the top right",
         ];
@@ -207,9 +208,11 @@ impl LevelContext {
         }
     }
 
-    fn get_movement(
+    fn get_movement_input(
         &mut self,
         mouse_vec: Vec2,
+        screen_width: f32,
+        screen_height: f32,
         shared_state: &SharedState,
     ) -> Option<MovementInput> {
         if self.is_win {
@@ -218,8 +221,11 @@ impl LevelContext {
         }
 
         let movement_input = if shared_state.is_mobile {
-            self.mobile_input_reader
-                .get_movement_input_mobile(mouse_vec)
+            self.mobile_input_reader.get_movement_input_mobile(
+                mouse_vec,
+                screen_width,
+                screen_height,
+            )
         } else {
             input::get_movement_input_desktop()
         };
