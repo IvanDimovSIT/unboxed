@@ -24,14 +24,17 @@ pub enum Action {
 
 pub fn process(level: &mut Level, movement_input: MovementInput) -> Vec<Action> {
     let direction = get_direction_for_movement(movement_input);
-    let initial_actions = create_initial_actions(level, direction);
+    let initial_movements = create_initial_deltas(level, direction);
 
-    if initial_actions.is_empty() {
+    if initial_movements.is_empty() {
         return vec![];
     }
 
-    let result_actions =
-        remove_dulplicate_actions(propagate_actions(&initial_actions, &initial_actions, level));
+    let result_actions = remove_duplicate_actions(propagate_movements(
+        &initial_movements,
+        &initial_movements,
+        level,
+    ));
     if result_actions.is_empty() {
         return vec![];
     }
@@ -51,8 +54,8 @@ pub fn undo_actions(level: &mut Level, mut actions_to_undo: Vec<Action>) -> Vec<
     actions_to_undo
 }
 
-fn create_initial_actions(level: &Level, delta: Ivec2) -> Vec<Action> {
-    let mut player_deltas = vec![];
+fn create_initial_deltas(level: &Level, delta: Ivec2) -> Vec<MovementDelta> {
+    let mut player_deltas = Vec::with_capacity(4);
     for y in 0..Level::LEVEL_HEIGHT as i32 {
         for x in 0..Level::LEVEL_WIDTH as i32 {
             let tile = level.get_above(x, y);
@@ -64,10 +67,10 @@ fn create_initial_actions(level: &Level, delta: Ivec2) -> Vec<Action> {
             player_deltas.push(MovementDelta { tile, from, to });
         }
     }
-    let mut initial_actions = Vec::with_capacity(player_deltas.len() * 2);
+    let mut initial_deltas = Vec::with_capacity(player_deltas.len() * 2);
 
     for player_delta in player_deltas {
-        initial_actions.push(Action::Move(player_delta));
+        initial_deltas.push(player_delta);
         let player_opposite_move_dir = player_delta.from - player_delta.to;
         let mut opposite_tile_pos = player_delta.from + player_opposite_move_dir;
         while !is_position_outside_level(opposite_tile_pos) {
@@ -76,16 +79,16 @@ fn create_initial_actions(level: &Level, delta: Ivec2) -> Vec<Action> {
                 break;
             }
 
-            initial_actions.push(Action::Move(MovementDelta {
+            initial_deltas.push(MovementDelta {
                 tile: opposite_tile,
                 from: opposite_tile_pos,
                 to: opposite_tile_pos - player_opposite_move_dir,
-            }));
+            });
             opposite_tile_pos += player_opposite_move_dir;
         }
     }
 
-    initial_actions
+    initial_deltas
 }
 
 fn apply_actions(level: &mut Level, actions: &[Action]) {
@@ -108,20 +111,15 @@ fn apply_actions(level: &mut Level, actions: &[Action]) {
     }
 }
 
-fn propagate_actions(
-    initial_actions: &[Action],
-    current_actions: &[Action],
+fn propagate_movements(
+    initial_movements: &[MovementDelta],
+    current_movements: &[MovementDelta],
     level: &Level,
 ) -> Vec<Action> {
-    assert!(!current_actions.is_empty());
-    let mut final_deltas = vec![];
+    assert!(!current_movements.is_empty());
+    let mut final_actions = Vec::with_capacity(current_movements.len() * 2);
 
-    for current_action in current_actions {
-        let current_delta = if let Action::Move(movement) = *current_action {
-            movement
-        } else {
-            continue;
-        };
+    for current_delta in current_movements {
         if is_position_outside_level(current_delta.to) {
             continue;
         }
@@ -129,11 +127,11 @@ fn propagate_actions(
         let tile = level.get_above(current_delta.to.x, current_delta.to.y);
         match tile {
             AboveTile::None => {
-                final_deltas.push(Action::Move(current_delta));
+                final_actions.push(Action::Move(*current_delta));
             }
             AboveTile::Bomb => {
-                final_deltas.push(Action::Move(current_delta));
-                final_deltas.push(Action::Explosion(current_delta.to));
+                final_actions.push(Action::Move(*current_delta));
+                final_actions.push(Action::Explosion(current_delta.to));
             }
             AboveTile::Player | AboveTile::Box => {
                 let new_d = MovementDelta {
@@ -141,38 +139,30 @@ fn propagate_actions(
                     from: current_delta.to,
                     to: calculate_push_delta(current_delta.from, current_delta.to),
                 };
-                let mut resolved =
-                    propagate_actions(initial_actions, &[Action::Move(new_d)], level);
+                let mut resolved = propagate_movements(initial_movements, &[new_d], level);
                 if !resolved.is_empty() {
-                    final_deltas.push(Action::Move(current_delta));
-                    final_deltas.append(&mut resolved);
+                    final_actions.push(Action::Move(*current_delta));
+                    final_actions.append(&mut resolved);
                 }
             }
             AboveTile::PullBox => {
-                push_pull_box(&mut final_deltas, current_delta, initial_actions, level)
+                push_pull_box(&mut final_actions, *current_delta, initial_movements, level)
             }
             AboveTile::Wall => {}
         }
     }
 
-    final_deltas
+    final_actions
 }
 
 fn push_pull_box(
-    actions_deltas: &mut Vec<Action>,
+    final_actions: &mut Vec<Action>,
     push_delta: MovementDelta,
-    initial_actions: &[Action],
+    initial_movements: &[MovementDelta],
     level: &Level,
 ) {
-    let box_delta_option = initial_actions
+    let box_delta_option = initial_movements
         .iter()
-        .filter_map(|action| {
-            if let Action::Move(movement) = action {
-                Some(movement)
-            } else {
-                None
-            }
-        })
         .find(|delta| delta.from == push_delta.to);
     if let Some(box_delta) = box_delta_option {
         let box_dir = box_delta.to - box_delta.from;
@@ -189,10 +179,10 @@ fn push_pull_box(
         from: push_delta.to,
         to: calculate_push_delta(push_delta.from, push_delta.to),
     };
-    let mut resolved = propagate_actions(initial_actions, &[Action::Move(new_d)], level);
+    let mut resolved = propagate_movements(initial_movements, &[new_d], level);
     if !resolved.is_empty() {
-        actions_deltas.push(Action::Move(push_delta));
-        actions_deltas.append(&mut resolved);
+        final_actions.push(Action::Move(push_delta));
+        final_actions.append(&mut resolved);
     }
 }
 
@@ -215,7 +205,7 @@ fn reverse_actions(actions: &mut [Action]) {
     }
 }
 
-fn remove_dulplicate_actions(deltas: Vec<Action>) -> Vec<Action> {
+fn remove_duplicate_actions(deltas: Vec<Action>) -> Vec<Action> {
     let set: HashSet<Action> = deltas.into_iter().collect();
     set.into_iter().collect()
 }

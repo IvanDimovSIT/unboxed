@@ -93,7 +93,9 @@ impl LevelContext {
             return Event::ToLevelSelect;
         }
 
-        let movement_input = if undo_button.is_clicked {
+        let movement_input = if self.is_win {
+            None
+        } else if undo_button.is_clicked {
             Some(MovementInput::Undo)
         } else if reset_button.is_clicked {
             Some(MovementInput::Reset)
@@ -215,11 +217,6 @@ impl LevelContext {
         screen_height: f32,
         shared_state: &SharedState,
     ) -> Option<MovementInput> {
-        if self.is_win {
-            self.cached_move = None;
-            return None;
-        }
-
         let movement_input = if shared_state.is_mobile {
             self.mobile_input_reader.get_movement_input_mobile(
                 mouse_vec,
@@ -239,10 +236,12 @@ impl LevelContext {
                 self.cached_move = movement_input;
                 None
             }
-        } else {
+        } else if self.animation_actions.is_empty() {
             let cached_move = self.cached_move;
             self.cached_move = None;
             cached_move
+        } else {
+            None
         }
     }
 
@@ -272,7 +271,7 @@ impl LevelContext {
             self.show_messages(shared_state);
             draw_level_number(self.current_level_index + 1, height, resource_manager);
             back_button.draw(resource_manager);
-            if shared_state.is_mobile {
+            if shared_state.is_mobile && !self.is_win {
                 undo_button.draw(resource_manager);
                 reset_button.draw(resource_manager);
             }
@@ -300,7 +299,7 @@ impl LevelContext {
             if let Action::Move(movement) = *action {
                 if movement.tile == AboveTile::Player {
                     shared_state.play_sound_if_enabled(SoundId::Move);
-                    return;
+                    break;
                 }
             }
         }
