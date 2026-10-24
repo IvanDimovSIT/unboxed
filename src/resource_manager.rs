@@ -20,6 +20,8 @@ const WALL_IMG: &[u8] = include_bytes!("../resources/images/wall.png");
 const PALYER_IMG: &[u8] = include_bytes!("../resources/images/player.png");
 const BOX_IMG: &[u8] = include_bytes!("../resources/images/box.png");
 const PULL_BOX_IMG: &[u8] = include_bytes!("../resources/images/pull_box.png");
+const BOMB_IMG: &[u8] = include_bytes!("../resources/images/bomb.png");
+const EXPLOSION_IMG: &[u8] = include_bytes!("../resources/images/explosion.png");
 
 const LEVEL_BUTTON_IMG: &[u8] = include_bytes!("../resources/images/level_button.png");
 const LEVEL_BUTTON_SELECTED_IMG: &[u8] =
@@ -38,12 +40,14 @@ const BUTTON_SOUND: &[u8] = include_bytes!("../resources/sounds/button.wav");
 const PUSH_BOX_SOUND: &[u8] = include_bytes!("../resources/sounds/push_box.wav");
 const WIN_SOUND: &[u8] = include_bytes!("../resources/sounds/win.wav");
 const MOVE_SOUND: &[u8] = include_bytes!("../resources/sounds/move.wav");
+const EXPLOSION_SOUND: &[u8] = include_bytes!("../resources/sounds/explosion.wav");
 
-const SOUNDS_ARRAY: [(SoundId, &[u8]); 4] = [
+const SOUNDS_ARRAY: [(SoundId, &[u8]); 5] = [
     (SoundId::Button, BUTTON_SOUND),
     (SoundId::PushBox, PUSH_BOX_SOUND),
     (SoundId::Win, WIN_SOUND),
     (SoundId::Move, MOVE_SOUND),
+    (SoundId::Explosion, EXPLOSION_SOUND),
 ];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -52,6 +56,7 @@ pub enum SoundId {
     PushBox,
     Win,
     Move,
+    Explosion,
 }
 
 #[derive(Debug)]
@@ -67,6 +72,7 @@ pub struct ResourceManager {
     pub checkmark: Texture2D,
     pub sound_on: Texture2D,
     pub sound_off: Texture2D,
+    pub explosion: Texture2D,
     sounds: HashMap<SoundId, Sound>,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
@@ -75,6 +81,7 @@ pub struct ResourceManager {
     player_tile: Texture2D,
     box_tile: Texture2D,
     pull_box_tile: Texture2D,
+    bomb_tile: Texture2D,
 }
 impl ResourceManager {
     pub async fn new() -> Self {
@@ -94,7 +101,9 @@ impl ResourceManager {
             player_tile: Self::load(PALYER_IMG),
             box_tile: Self::load(BOX_IMG),
             pull_box_tile: Self::load(PULL_BOX_IMG),
+            bomb_tile: Self::load(BOMB_IMG),
             background: Self::load(BACKGROUND_IMG),
+            explosion: Self::load(EXPLOSION_IMG),
             sounds: Self::load_sounds().await,
             back_arrow: Self::load(BACK_ARROW_IMG),
             checkmark: Self::load(CHECKMARK_IMG),
@@ -125,6 +134,7 @@ impl ResourceManager {
             AboveTile::Box => &self.box_tile,
             AboveTile::Wall => &self.wall_tile,
             AboveTile::PullBox => &self.pull_box_tile,
+            AboveTile::Bomb => &self.bomb_tile,
         }
     }
 

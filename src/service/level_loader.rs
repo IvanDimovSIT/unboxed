@@ -8,6 +8,7 @@ const BOX_EXIT_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
 const PLAYER_EXIT_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const BOX_COLOR: Color = Color::from_rgba(255, 0, 0, 255);
 const PULL_BOX_COLOR: Color = Color::from_rgba(0, 0, 255, 255);
+const BOMB_COLOR: Color = Color::from_rgba(255, 0, 255, 255);
 const WALL_COLOR: Color = Color::from_rgba(255, 255, 255, 255);
 const PLAYER_COLOR: Color = Color::from_rgba(0, 255, 0, 255);
 const EMPTY_TILE_COLOR: Color = Color::from_rgba(0, 0, 0, 255);
@@ -69,6 +70,7 @@ fn color_to_tile(color: Color) -> AboveTile {
     match color {
         BOX_COLOR => AboveTile::Box,
         PULL_BOX_COLOR => AboveTile::PullBox,
+        BOMB_COLOR => AboveTile::Bomb,
         WALL_COLOR => AboveTile::Wall,
         PLAYER_COLOR => AboveTile::Player,
         EMPTY_TILE_COLOR => AboveTile::None,

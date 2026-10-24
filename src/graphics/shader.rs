@@ -28,6 +28,13 @@ pub struct Light {
     color: Vec4,
 }
 impl Light {
+    pub fn explosion(position: Vec2) -> Light {
+        Light {
+            position,
+            color: vec4(1.0, 0.6, 0.0, 0.13),
+        }
+    }
+
     pub fn from_tile(tile: AboveTile, pos: Vec2) -> Option<Light> {
         match tile {
             AboveTile::Player => Some(Light {

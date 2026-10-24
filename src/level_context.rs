@@ -17,7 +17,7 @@ use crate::{
     resource_manager::SoundId,
     service::{
         self,
-        movement::{self, MovementDelta},
+        movement::{self, Action},
     },
     shared_state::SharedState,
     ui::{
@@ -33,25 +33,25 @@ pub struct LevelContext {
     #[cfg(debug_assertions)]
     inputs: Vec<MovementInput>,
     level: Level,
-    previous_deltas: Vec<Vec<MovementDelta>>,
+    previous_actions: Vec<Vec<Action>>,
     animation_time_s: f32,
-    animation_deltas: Vec<MovementDelta>,
+    animation_actions: Vec<Action>,
     current_level_index: usize,
     is_win: bool,
     show_controls: bool,
     mobile_input_reader: MobileInputReader,
 }
 impl LevelContext {
-    const PREVIOUS_DELTAS_CAPACITY: usize = 64;
+    const PREVIOUS_ACTIONS_CAPACITY: usize = 128;
     const ANIMATION_TIME: f32 = 0.1;
 
     pub fn new(level: Level, index: usize, show_controls: bool) -> Self {
         Self {
             level_template: level.clone(),
             level,
-            previous_deltas: Vec::with_capacity(Self::PREVIOUS_DELTAS_CAPACITY),
+            previous_actions: Vec::with_capacity(Self::PREVIOUS_ACTIONS_CAPACITY),
             animation_time_s: 0.0,
-            animation_deltas: vec![],
+            animation_actions: vec![],
             current_level_index: index,
             is_win: false,
             cached_move: None,
@@ -64,8 +64,8 @@ impl LevelContext {
 
     pub fn reset(&mut self) {
         self.level = self.level_template.clone();
-        self.previous_deltas.clear();
-        self.animation_deltas.clear();
+        self.previous_actions.clear();
+        self.animation_actions.clear();
         self.animation_time_s = 0.0;
         self.cached_move = None;
         #[cfg(debug_assertions)]
@@ -111,11 +111,11 @@ impl LevelContext {
             }
         }
 
-        if !self.animation_deltas.is_empty() {
+        if !self.animation_actions.is_empty() {
             self.animation_time_s += delta;
         }
         if self.animation_time_s >= Self::ANIMATION_TIME {
-            self.animation_deltas.clear();
+            self.animation_actions.clear();
             self.animation_time_s = 0.0;
         }
 
@@ -181,9 +181,9 @@ impl LevelContext {
     }
 
     fn undo(&mut self) {
-        if let Some(prev_deltas) = self.previous_deltas.pop() {
-            let undo_deltas = movement::undo_deltas(&mut self.level, prev_deltas);
-            self.animation_deltas = undo_deltas;
+        if let Some(prev_deltas) = self.previous_actions.pop() {
+            let undo_deltas = movement::undo_actions(&mut self.level, prev_deltas);
+            self.animation_actions = undo_deltas;
             self.animation_time_s = 0.0;
             self.cached_move = None;
             #[cfg(debug_assertions)]
@@ -197,14 +197,14 @@ impl LevelContext {
             movement,
             MovementInput::Left | MovementInput::Right | MovementInput::Up | MovementInput::Down
         ));
-        let movement_deltas = service::movement::process(&mut self.level, movement);
-        if !movement_deltas.is_empty() {
+        let result_actions = service::movement::process(&mut self.level, movement);
+        if !result_actions.is_empty() {
             #[cfg(debug_assertions)]
             self.inputs.push(movement);
-            Self::play_sounds_for_deltas(&movement_deltas, shared_state);
-            self.animation_deltas = movement_deltas.clone();
+            Self::play_sounds_for_actions(&result_actions, shared_state);
+            self.animation_actions = result_actions.clone();
             self.animation_time_s = 0.0;
-            self.previous_deltas.push(movement_deltas);
+            self.previous_actions.push(result_actions);
         }
     }
 
@@ -230,7 +230,7 @@ impl LevelContext {
             input::get_movement_input_desktop()
         };
         if let Some(movement) = movement_input {
-            if self.animation_deltas.is_empty() {
+            if self.animation_actions.is_empty() {
                 movement_input
             } else if movement == MovementInput::Undo || movement == MovementInput::Reset {
                 self.cached_move = None;
@@ -265,7 +265,7 @@ impl LevelContext {
                 top_left: vec2(window_pos.start_x, window_pos.start_y),
                 width: window_pos.width,
                 level: &self.level,
-                deltas: &self.animation_deltas,
+                actions: &self.animation_actions,
                 resource_manager,
             };
             let lights = draw_level(&level_draw_context);
@@ -281,17 +281,27 @@ impl LevelContext {
         });
     }
 
-    fn play_sounds_for_deltas(deltas: &[MovementDelta], shared_state: &SharedState) {
-        for d in deltas {
-            if d.tile.is_box() {
-                shared_state.play_sound_if_enabled(SoundId::PushBox);
+    fn play_sounds_for_actions(actions: &[Action], shared_state: &SharedState) {
+        for action in actions {
+            if let Action::Explosion(_) = *action {
+                shared_state.play_sound_if_enabled(SoundId::Explosion);
                 break;
             }
         }
-        for d in deltas {
-            if d.tile == AboveTile::Player {
-                shared_state.play_sound_if_enabled(SoundId::Move);
-                return;
+        for action in actions {
+            if let Action::Move(movement) = *action {
+                if movement.tile.is_box() {
+                    shared_state.play_sound_if_enabled(SoundId::PushBox);
+                    break;
+                }
+            }
+        }
+        for action in actions {
+            if let Action::Move(movement) = *action {
+                if movement.tile == AboveTile::Player {
+                    shared_state.play_sound_if_enabled(SoundId::Move);
+                    return;
+                }
             }
         }
     }

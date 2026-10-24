@@ -6,6 +6,7 @@ pub enum AboveTile {
     Box,
     Wall,
     PullBox,
+    Bomb,
 }
 impl AboveTile {
     pub fn is_box(self) -> bool {

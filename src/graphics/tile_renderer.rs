@@ -11,6 +11,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct TileRenderer {
+    explosions: Vec<Vec2>,
     above_tiles: Vec<AboveTileDrawCommand>,
     floor_tiles: Vec<FloorTileDrawCommand>,
 }
@@ -21,6 +22,7 @@ impl TileRenderer {
         Self {
             above_tiles,
             floor_tiles,
+            explosions: vec![],
         }
     }
 
@@ -34,6 +36,10 @@ impl TileRenderer {
 
     pub fn prepare_floor(&mut self, tile: FloorTile, pos: Vec2) {
         self.floor_tiles.push(FloorTileDrawCommand { pos, tile });
+    }
+
+    pub fn prepare_explosion(&mut self, pos: Vec2) {
+        self.explosions.push(pos);
     }
 
     pub fn render(&mut self, tile_size: f32, resource_manager: &ResourceManager) {
@@ -60,6 +66,18 @@ impl TileRenderer {
                 texture,
                 draw_command.pos.x,
                 draw_command.pos.y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size,
+                    ..Default::default()
+                },
+            );
+        }
+        for explostion_pos in &self.explosions {
+            draw_texture_ex(
+                &resource_manager.explosion,
+                explostion_pos.x,
+                explostion_pos.y,
                 WHITE,
                 DrawTextureParams {
                     dest_size,
