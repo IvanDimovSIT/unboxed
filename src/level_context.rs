@@ -10,7 +10,7 @@ use crate::{
     graphics::{
         background::draw_background,
         draw::{LevelDrawContext, draw_level},
-        level_window::find_level_window_position,
+        inner_window::find_level_window_position,
     },
     input::{self, MobileInputReader, MovementInput, get_mouse_vec},
     level::{AboveTile, Level},
@@ -80,9 +80,9 @@ impl LevelContext {
 
         let (width, height) = screen_size();
         let mouse_vec = get_mouse_vec();
-        let mut back_button = Button::new_back(width, height);
-        let mut undo_button = Button::new_undo(width, height);
-        let mut reset_button = Button::new_reset(width, height);
+        let mut back_button = Button::new_back(width, height, shared_state.is_mobile);
+        let mut undo_button = Button::new_undo(width, height, shared_state.is_mobile);
+        let mut reset_button = Button::new_reset(width, height, shared_state.is_mobile);
         back_button.detect(mouse_vec, shared_state);
         if shared_state.is_mobile {
             undo_button.detect(mouse_vec, shared_state);

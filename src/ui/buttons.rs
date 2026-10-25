@@ -12,7 +12,8 @@ use crate::{
 };
 
 const TEXT_SIZE_COEF: f32 = 0.8;
-const BTN_SIZE_COEF: f32 = 0.13;
+const DESKTOP_BTN_SIZE_COEF: f32 = 0.13;
+const MOBILE_BTN_SIZE_COEF: f32 = 0.18;
 const POS_COEF: f32 = 0.015;
 
 #[derive(Debug, Clone)]
@@ -24,13 +25,14 @@ enum ButtonType {
     Reset,
     SoundOn,
     SoundOff,
+    FullscreenOn,
+    FullscreenOff,
 }
 
 #[derive(Debug, Clone, Copy)]
 enum ButtonPosition {
-    Left,
-    Right,
-    LeftLower,
+    Left(u8),
+    Right(u8),
 }
 
 #[derive(Debug)]
@@ -61,38 +63,41 @@ impl Button {
         )
     }
 
-    pub fn new_help(screen_width: f32, screen_height: f32) -> Self {
-        let button_size = BTN_SIZE_COEF * screen_height;
+    pub fn new_help(screen_width: f32, screen_height: f32, is_mobile: bool) -> Self {
+        let button_size = Self::get_button_size_coef(is_mobile) * screen_height;
         let smaller_size = screen_width.min(screen_height);
         let xy = POS_COEF * smaller_size;
 
         Self::new(xy, xy, button_size, ButtonType::Help)
     }
 
-    pub fn new_back(screen_width: f32, screen_height: f32) -> Self {
+    pub fn new_back(screen_width: f32, screen_height: f32, is_mobile: bool) -> Self {
         Self::new_image_button(
             screen_width,
             screen_height,
-            ButtonPosition::Left,
+            ButtonPosition::Left(0),
             ButtonType::Back,
+            is_mobile,
         )
     }
 
-    pub fn new_undo(screen_width: f32, screen_height: f32) -> Self {
+    pub fn new_undo(screen_width: f32, screen_height: f32, is_mobile: bool) -> Self {
         Self::new_image_button(
             screen_width,
             screen_height,
-            ButtonPosition::Right,
+            ButtonPosition::Right(0),
             ButtonType::Undo,
+            is_mobile,
         )
     }
 
-    pub fn new_reset(screen_width: f32, screen_height: f32) -> Self {
+    pub fn new_reset(screen_width: f32, screen_height: f32, is_mobile: bool) -> Self {
         Self::new_image_button(
             screen_width,
             screen_height,
-            ButtonPosition::LeftLower,
+            ButtonPosition::Left(1),
             ButtonType::Reset,
+            is_mobile,
         )
     }
 
@@ -106,8 +111,30 @@ impl Button {
         Self::new_image_button(
             screen_width,
             screen_height,
-            ButtonPosition::LeftLower,
+            ButtonPosition::Left(1),
             button_type,
+            shared_state.is_mobile,
+        )
+    }
+
+    pub fn new_fullscreen(
+        screen_width: f32,
+        screen_height: f32,
+        is_fullscreen: bool,
+        is_mobile: bool,
+    ) -> Self {
+        let button_type: ButtonType = if is_fullscreen {
+            ButtonType::FullscreenOff
+        } else {
+            ButtonType::FullscreenOn
+        };
+
+        Self::new_image_button(
+            screen_width,
+            screen_height,
+            ButtonPosition::Left(2),
+            button_type,
+            is_mobile,
         )
     }
 
@@ -116,15 +143,18 @@ impl Button {
         screen_height: f32,
         position: ButtonPosition,
         button_type: ButtonType,
+        is_mobile: bool,
     ) -> Self {
-        let button_size = BTN_SIZE_COEF * screen_height;
+        let button_size = Self::get_button_size_coef(is_mobile) * screen_height;
         let smaller_size = screen_width.min(screen_height);
         let margin = POS_COEF * smaller_size;
 
         let (x, y) = match position {
-            ButtonPosition::Left => (margin, margin),
-            ButtonPosition::Right => (screen_width - (margin + button_size), margin),
-            ButtonPosition::LeftLower => (margin, margin * 2.0 + button_size),
+            ButtonPosition::Left(y) => (margin, margin + (button_size + margin) * y as f32),
+            ButtonPosition::Right(y) => (
+                screen_width - (margin + button_size),
+                margin + (button_size + margin) * y as f32,
+            ),
         };
 
         Self::new(x, y, button_size, button_type)
@@ -178,6 +208,12 @@ impl Button {
             ButtonType::Reset => self.draw_texture_button(&resource_manager.reset_x),
             ButtonType::SoundOn => self.draw_texture_button(&resource_manager.sound_on),
             ButtonType::SoundOff => self.draw_texture_button(&resource_manager.sound_off),
+            ButtonType::FullscreenOn => {
+                self.draw_texture_button(&resource_manager.fullscreen_on_arrows)
+            }
+            ButtonType::FullscreenOff => {
+                self.draw_texture_button(&resource_manager.fullscreen_off_arrows)
+            }
         }
     }
 
@@ -258,5 +294,13 @@ impl Button {
                 ..Default::default()
             },
         );
+    }
+
+    fn get_button_size_coef(is_mobile: bool) -> f32 {
+        if is_mobile {
+            MOBILE_BTN_SIZE_COEF
+        } else {
+            DESKTOP_BTN_SIZE_COEF
+        }
     }
 }

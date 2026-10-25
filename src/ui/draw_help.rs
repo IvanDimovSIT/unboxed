@@ -15,7 +15,7 @@ const FONT_SIZE_COEF: f32 = 0.06;
 
 pub fn draw_help(shared_state: &SharedState) -> Event {
     let (width, height) = screen_size();
-    let mut back_button = Button::new_back(width, height);
+    let mut back_button = Button::new_back(width, height, shared_state.is_mobile);
     let resource_manager = &shared_state.resource_manager;
     resource_manager.shader.use_shader(width, height, || {
         draw_background(&shared_state.resource_manager);

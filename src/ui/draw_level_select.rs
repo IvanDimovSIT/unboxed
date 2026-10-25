@@ -2,6 +2,7 @@ use crate::{
     game_context::Event,
     graphics::background::draw_background,
     input::get_mouse_vec,
+    service::browser::{is_fullscreen, set_fullscreen},
     shared_state::SharedState,
     ui::{buttons::Button, message::draw_centered_text},
 };
@@ -15,9 +16,12 @@ const MARGIN_COEF: f32 = 0.01;
 
 pub fn draw_level_select(shared_state: &SharedState) -> Event {
     let levels_count = shared_state.level_templates.len();
+    let is_fullscreen = is_fullscreen();
     let (width, height) = screen_size();
-    let mut help_btn = Button::new_help(width, height);
+    let mut help_btn = Button::new_help(width, height, shared_state.is_mobile);
     let mut sound_btn = Button::new_sound(width, height, shared_state);
+    let mut fullscreen_btn =
+        Button::new_fullscreen(width, height, is_fullscreen, shared_state.is_mobile);
     let button_size = BUTTONS_SIZE_COEF * width;
     let margin = MARGIN_COEF * width;
     let grid_width = (button_size + margin) * BUTTONS_PER_ROW as f32;
@@ -39,14 +43,20 @@ pub fn draw_level_select(shared_state: &SharedState) -> Event {
         draw_centered_text("Unboxed", TITLE_Y_COEF, TITLE_SIZE_COEF, resource_manager);
         help_btn.detect(mouse_vec, shared_state);
         sound_btn.detect(mouse_vec, shared_state);
+        fullscreen_btn.detect(mouse_vec, shared_state);
         help_btn.draw(resource_manager);
         sound_btn.draw(resource_manager);
+        fullscreen_btn.draw(resource_manager);
         for level_button in &mut level_buttons {
             level_button.detect(mouse_vec, shared_state);
             level_button.draw(resource_manager);
         }
         vec![]
     });
+
+    if fullscreen_btn.is_clicked {
+        set_fullscreen(!is_fullscreen);
+    }
 
     if sound_btn.is_clicked {
         return Event::SetSound(!shared_state.is_sound_on);

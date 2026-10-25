@@ -1,4 +1,7 @@
+use macroquad::miniquad::window::screen_size;
+
 use crate::{
+    graphics::background::draw_rotate_screen_prompt,
     level_context::LevelContext,
     service::persistence::save_completed_levels,
     shared_state::SharedState,
@@ -36,6 +39,14 @@ impl GameContext {
     }
 
     pub fn process_frame(&mut self, delta: f32) {
+        if self.shared_state.is_mobile {
+            let (width, height) = screen_size();
+            if height > width {
+                draw_rotate_screen_prompt(&self.shared_state.resource_manager);
+                return;
+            }
+        }
+
         let event = match &mut self.mode {
             Mode::InLevel(ctx) => ctx.process_level(&self.shared_state, delta),
             Mode::LevelSelect => draw_level_select(&self.shared_state),

@@ -33,6 +33,11 @@ const BACKGROUND_IMG: &[u8] = include_bytes!("../resources/images/background.png
 const CHECKMARK_IMG: &[u8] = include_bytes!("../resources/images/checkmark.png");
 const SOUND_ON_IMG: &[u8] = include_bytes!("../resources/images/sound_on.png");
 const SOUND_OFF_IMG: &[u8] = include_bytes!("../resources/images/sound_off.png");
+const FULLSCREEN_ON_ARROWS_IMG: &[u8] =
+    include_bytes!("../resources/images/fullscreen_on_arrows.png");
+const FULLSCREEN_OFF_ARROWS_IMG: &[u8] =
+    include_bytes!("../resources/images/fullscreen_off_arrows.png");
+const ROTATE_DEVICE_IMG: &[u8] = include_bytes!("../resources/images/rotate_device.png");
 
 const FONT_BYTES: &[u8] = include_bytes!("../resources/font.ttf");
 
@@ -72,7 +77,10 @@ pub struct ResourceManager {
     pub checkmark: Texture2D,
     pub sound_on: Texture2D,
     pub sound_off: Texture2D,
+    pub fullscreen_on_arrows: Texture2D,
+    pub fullscreen_off_arrows: Texture2D,
     pub explosion: Texture2D,
+    pub rotate_device_prompt: Texture2D,
     sounds: HashMap<SoundId, Sound>,
     empty_tile: Texture2D,
     box_exit_tile: Texture2D,
@@ -111,6 +119,9 @@ impl ResourceManager {
             undo_arrow: Self::load(UNDO_ARROW_IMG),
             sound_on: Self::load(SOUND_ON_IMG),
             sound_off: Self::load(SOUND_OFF_IMG),
+            fullscreen_on_arrows: Self::load(FULLSCREEN_ON_ARROWS_IMG),
+            fullscreen_off_arrows: Self::load(FULLSCREEN_OFF_ARROWS_IMG),
+            rotate_device_prompt: Self::load(ROTATE_DEVICE_IMG),
         }
     }
 
