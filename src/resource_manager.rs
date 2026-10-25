@@ -9,6 +9,7 @@ use macroquad::{
 
 use crate::{
     graphics::shader::Shader,
+    input::MovementInput,
     level::{AboveTile, FloorTile},
     ui::message::draw_loading_screen,
 };
@@ -38,6 +39,10 @@ const FULLSCREEN_ON_ARROWS_IMG: &[u8] =
 const FULLSCREEN_OFF_ARROWS_IMG: &[u8] =
     include_bytes!("../resources/images/fullscreen_off_arrows.png");
 const ROTATE_DEVICE_IMG: &[u8] = include_bytes!("../resources/images/rotate_device.png");
+const UP_ARROW_IMG: &[u8] = include_bytes!("../resources/images/up_arrow.png");
+const DOWN_ARROW_IMG: &[u8] = include_bytes!("../resources/images/down_arrow.png");
+const LEFT_ARROW_IMG: &[u8] = include_bytes!("../resources/images/left_arrow.png");
+const RIGHT_ARROW_IMG: &[u8] = include_bytes!("../resources/images/right_arrow.png");
 
 const FONT_BYTES: &[u8] = include_bytes!("../resources/font.ttf");
 
@@ -90,6 +95,10 @@ pub struct ResourceManager {
     box_tile: Texture2D,
     pull_box_tile: Texture2D,
     bomb_tile: Texture2D,
+    up_arrow: Texture2D,
+    down_arrow: Texture2D,
+    left_arrow: Texture2D,
+    right_arrow: Texture2D,
 }
 impl ResourceManager {
     pub async fn new() -> Self {
@@ -122,12 +131,29 @@ impl ResourceManager {
             fullscreen_on_arrows: Self::load(FULLSCREEN_ON_ARROWS_IMG),
             fullscreen_off_arrows: Self::load(FULLSCREEN_OFF_ARROWS_IMG),
             rotate_device_prompt: Self::load(ROTATE_DEVICE_IMG),
+            up_arrow: Self::load(UP_ARROW_IMG),
+            down_arrow: Self::load(DOWN_ARROW_IMG),
+            left_arrow: Self::load(LEFT_ARROW_IMG),
+            right_arrow: Self::load(RIGHT_ARROW_IMG),
         }
     }
 
     pub fn play_sound(&self, sound_id: SoundId) {
         let sound = &self.sounds[&sound_id];
         play_sound(sound, PlaySoundParams::default());
+    }
+
+    pub fn get_arrow_button_texture_for_direction(
+        &self,
+        movemnt_input: MovementInput,
+    ) -> &Texture2D {
+        match movemnt_input {
+            MovementInput::Left => &self.left_arrow,
+            MovementInput::Right => &self.right_arrow,
+            MovementInput::Down => &self.down_arrow,
+            MovementInput::Up => &self.up_arrow,
+            _ => panic!("Invalid direction: {:?}", movemnt_input),
+        }
     }
 
     pub fn get_texture_for_floor(&self, floor: FloorTile) -> &Texture2D {

@@ -1,19 +1,19 @@
 use macroquad::{
-    color::WHITE,
+    color::{Color, WHITE},
     math::{Rect, Vec2},
+    prelude::warn,
+    shapes::{DrawRectangleParams, draw_rectangle_lines_ex},
     text::{TextParams, draw_text_ex, measure_text},
     texture::{DrawTextureParams, Texture2D, draw_texture_ex},
 };
 
 use crate::{
-    input,
+    input::{self, MovementInput},
     resource_manager::{ResourceManager, SoundId},
     shared_state::SharedState,
 };
 
 const TEXT_SIZE_COEF: f32 = 0.8;
-const DESKTOP_BTN_SIZE_COEF: f32 = 0.13;
-const MOBILE_BTN_SIZE_COEF: f32 = 0.18;
 const POS_COEF: f32 = 0.015;
 
 #[derive(Debug, Clone)]
@@ -297,10 +297,138 @@ impl Button {
     }
 
     fn get_button_size_coef(is_mobile: bool) -> f32 {
+        const DESKTOP_BTN_SIZE_COEF: f32 = 0.13;
+        const MOBILE_BTN_SIZE_COEF: f32 = 0.18;
+
         if is_mobile {
             MOBILE_BTN_SIZE_COEF
         } else {
             DESKTOP_BTN_SIZE_COEF
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct MobileMovementButtons {
+    buttons: [(MovementInput, Rect); 4],
+    hovered: [bool; 4],
+}
+impl MobileMovementButtons {
+    const SINGLE_BUTTON_SIZE_COEF: f32 = 0.2;
+    const MARGIN_COEF: f32 = 0.015;
+    const INNER_MARGIN: f32 = 4.0;
+
+    pub fn new(width: f32, height: f32) -> Self {
+        let size = Self::SINGLE_BUTTON_SIZE_COEF * height;
+        let margin = Self::MARGIN_COEF * width.min(height);
+
+        let right_x = width - margin - size;
+        let middle_x = right_x - size - Self::INNER_MARGIN;
+        let left_x = middle_x - size - Self::INNER_MARGIN * 2.0;
+
+        let bottom_y = height - margin;
+        let down_y = bottom_y - size;
+        let up_y = bottom_y - size * 2.0 - Self::INNER_MARGIN;
+        let side_y = bottom_y - size * 1.5;
+
+        Self {
+            buttons: [
+                (MovementInput::Up, Rect::new(middle_x, up_y, size, size)),
+                (MovementInput::Down, Rect::new(middle_x, down_y, size, size)),
+                (MovementInput::Left, Rect::new(left_x, side_y, size, size)),
+                (MovementInput::Right, Rect::new(right_x, side_y, size, size)),
+            ],
+            hovered: [false; 4],
+        }
+    }
+
+    pub fn detect(&mut self, mouse_vec: Vec2) -> Option<MovementInput> {
+        let clicked = input::click();
+        let mut result = None;
+
+        for (i, (movement, rect)) in self.buttons.iter().enumerate() {
+            self.hovered[i] = rect.contains(mouse_vec);
+            if self.hovered[i] && clicked {
+                result = Some(*movement);
+            }
+        }
+
+        result
+    }
+
+    pub fn draw(&self, resource_manager: &ResourceManager) {
+        const BORDER_SIZE: f32 = 4.0;
+        const BUTTON_TRASNPARENCY: Color = Color::from_rgba(255, 255, 255, 70);
+        const BORDER_COLOR: Color = Color::from_rgba(255, 255, 255, 100);
+
+        for (movement, rect) in &self.buttons {
+            draw_rectangle_lines_ex(
+                rect.x,
+                rect.y,
+                rect.w,
+                rect.h,
+                BORDER_SIZE,
+                DrawRectangleParams {
+                    color: BORDER_COLOR,
+                    ..Default::default()
+                },
+            );
+
+            let arrow_texture = resource_manager.get_arrow_button_texture_for_direction(*movement);
+            draw_texture_ex(
+                arrow_texture,
+                rect.x,
+                rect.y,
+                BUTTON_TRASNPARENCY,
+                DrawTextureParams {
+                    dest_size: Some(rect.size()),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct MobileButtonsGroup {
+    pub undo_button: Button,
+    pub reset_button: Button,
+    pub mobile_movement_buttons: MobileMovementButtons,
+}
+impl MobileButtonsGroup {
+    pub fn new(width: f32, height: f32, is_mobile: bool) -> Self {
+        let undo_button = Button::new_undo(width, height, is_mobile);
+        let reset_button = Button::new_reset(width, height, is_mobile);
+        let mobile_movement_buttons = MobileMovementButtons::new(width, height);
+
+        Self {
+            undo_button,
+            reset_button,
+            mobile_movement_buttons,
+        }
+    }
+
+    pub fn detect(&mut self, mouse_vec: Vec2, shared_state: &SharedState) -> Option<MovementInput> {
+        if !shared_state.is_mobile {
+            warn!("Calling 'detect' on mobile buttons when device isn't mobile");
+        }
+
+        self.undo_button.detect(mouse_vec, shared_state);
+        self.reset_button.detect(mouse_vec, shared_state);
+        let direction_input = self.mobile_movement_buttons.detect(mouse_vec);
+
+        if self.undo_button.is_clicked {
+            Some(MovementInput::Undo)
+        } else if self.reset_button.is_clicked {
+            Some(MovementInput::Reset)
+        } else {
+            direction_input
+        }
+    }
+
+    pub fn draw(&self, resource_manager: &ResourceManager) {
+        self.undo_button.draw(resource_manager);
+        self.reset_button.draw(resource_manager);
+        self.mobile_movement_buttons.draw(resource_manager);
     }
 }

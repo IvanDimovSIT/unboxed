@@ -1,8 +1,5 @@
 use macroquad::{
-    input::{
-        KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed, is_mouse_button_released,
-        mouse_position,
-    },
+    input::{KeyCode, MouseButton, is_key_pressed, is_mouse_button_pressed, mouse_position},
     math::{Vec2, vec2},
 };
 
@@ -66,66 +63,6 @@ pub fn get_movement_input_desktop() -> Option<MovementInput> {
         Some(MovementInput::Reset)
     } else {
         None
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MobileInputReader {
-    start: Option<Vec2>,
-}
-impl MobileInputReader {
-    pub fn new() -> Self {
-        Self { start: None }
-    }
-
-    pub fn reset(&mut self) {
-        self.start = None;
-    }
-
-    pub fn get_movement_input_mobile(
-        &mut self,
-        mouse_vec: Vec2,
-        screen_width: f32,
-        screen_height: f32,
-    ) -> Option<MovementInput> {
-        const MIN_TRAVEL_DISTANCE: f32 = 3.0;
-        if is_mouse_button_pressed(MouseButton::Left) {
-            self.start = Some(mouse_vec);
-            None
-        } else if is_mouse_button_released(MouseButton::Left) {
-            if let Some(start_point) = self.start {
-                let direction = mouse_vec - start_point;
-                let mouse_distance = direction.length();
-                if mouse_distance < MIN_TRAVEL_DISTANCE {
-                    let screen_center = vec2(screen_width / 2.0, screen_height / 2.0);
-                    let direction_from_center = mouse_vec - screen_center;
-                    Some(Self::determine_movement_type(direction_from_center))
-                } else {
-                    Some(Self::determine_movement_type(direction))
-                }
-            } else {
-                self.start = None;
-                None
-            }
-        } else {
-            None
-        }
-    }
-
-    fn determine_movement_type(direction: Vec2) -> MovementInput {
-        if direction.x.abs() > direction.y.abs() {
-            if direction.x < 0.0 {
-                MovementInput::Left
-            } else {
-                MovementInput::Right
-            }
-        } else {
-            if direction.y < 0.0 {
-                MovementInput::Up
-            } else {
-                MovementInput::Down
-            }
-        }
     }
 }
 
