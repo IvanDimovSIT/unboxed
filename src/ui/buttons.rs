@@ -324,7 +324,7 @@ impl MobileMovementButtons {
 
         let right_x = width - margin - size;
         let middle_x = right_x - size - Self::INNER_MARGIN;
-        let left_x = middle_x - size - Self::INNER_MARGIN * 2.0;
+        let left_x = middle_x - size - Self::INNER_MARGIN;
 
         let bottom_y = height - margin;
         let down_y = bottom_y - size;
